@@ -1,6 +1,6 @@
 {
   "name": "plump-store-rest",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "REST endpoint storage for Plump",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -39,7 +39,7 @@
     "mocha": "^3.0.2"
   },
   "peerDependencies": {
-    "plump": "ericeslinger/plump#modularize"
+    "plump": "kstf/plump#master"
   },
   "dependencies": {
     "@types/axios": "^0.9.35",
