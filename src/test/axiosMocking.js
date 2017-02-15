@@ -1,10 +1,12 @@
 import { MemoryStore } from 'plump';
 import * as axios from 'axios';
 import Promise from 'bluebird';
+import { JSONApi } from 'plump-json-api';
 
 const backingStore = new MemoryStore({ terminal: true });
 
 function mockup(t) {
+  const api = new JSONApi({ schemata: t.toJSON() });
   const mockedAxios = axios.create({ baseURL: '' });
   mockedAxios.defaults.adapter = (config) => {
     let apiWrap = true; // should we wrap in standard JSON API at the bottom
@@ -80,10 +82,13 @@ function mockup(t) {
       // console.log(`RESOLVING ${JSON.stringify(d)}`);
       if (d) {
         if (apiWrap) {
+          const root = Object.assign(
+            {},
+            d,
+            { type: t.$name }
+          );
           return {
-            data: {
-              [t.$name]: [d],
-            },
+            data: api.encode({ root, extended: [] }),
           };
         } else {
           return {

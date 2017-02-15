@@ -1,21 +1,24 @@
 import * as axios from 'axios';
-import { Storage } from 'plump';
+import { Storage, $self } from 'plump';
+import { JSONApi } from 'plump-json-api';
 
 const $axios = Symbol('$axios');
+const $json = Symbol('$json');
 import Promise from 'bluebird';
 
 export class RestStore extends Storage {
-
   constructor(opts = {}) {
     super(opts);
     const options = Object.assign(
       {},
       {
         baseURL: 'http://localhost/api',
+        schemata: [],
       },
       opts
     );
     this[$axios] = options.axios || axios.create(options);
+    this[$json] = new JSONApi({ schemata: options.schemata, baseURL: options.baseURL });
   }
 
   rest(options) {
@@ -33,7 +36,22 @@ export class RestStore extends Storage {
         throw new Error('Cannot create new content in a non-terminal store');
       }
     })
-    .then((d) => d.data[t.$name][0])
+    .then((response) => {
+      const result = this[$json].parse(response.data);
+      result.extended.forEach(item => {
+        // item.type is currently just a string.
+        // TODO: Figure out how to make it an actual Type
+        // OR change how notifyUpdate works
+        this.notifyUpdate(item.type, item.id, item, item.type.$include.concat($self));
+      });
+      const root = {};
+      for (const field in result.root) {
+        if (field !== 'type') {
+          root[field] = result.root[field];
+        }
+      }
+      return root;
+    })
     .then((result) => this.notifyUpdate(t, result[t.$id], result).then(() => result));
   }
 
@@ -41,7 +59,20 @@ export class RestStore extends Storage {
     return Promise.resolve()
     .then(() => this[$axios].get(`/${t.$name}/${id}`))
     .then((response) => {
-      return response.data[t.$name][0];
+      const result = this[$json].parse(response.data);
+      result.extended.forEach(item => {
+        // item.type is currently just a string.
+        // TODO: Figure out how to make it an actual Type
+        // OR change how notifyUpdate works
+        this.notifyUpdate(item.type, item.id, item, item.type.$include.concat($self));
+      });
+      const root = {};
+      for (const field in result.root) {
+        if (field !== 'type') {
+          root[field] = result.root[field];
+        }
+      }
+      return root;
     }).catch((err) => {
       if (err.response && err.response.status === 404) {
         return null;
