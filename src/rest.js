@@ -38,11 +38,10 @@ export class RestStore extends Storage {
     })
     .then((response) => {
       const result = this[$json].parse(response.data);
-      result.extended.forEach(item => {
-        // item.type is currently just a string.
-        // TODO: Figure out how to make it an actual Type
-        // OR change how notifyUpdate works
-        this.notifyUpdate(item.type, item.id, item, item.type.$include.concat($self));
+      result.extended.forEach((item, index) => {
+        const schema = this[$json].schema(item.type);
+        const childRelationships = response.data.included[index].relationships;
+        this.notifyUpdate(schema, item.id, item, Object.keys(childRelationships).concat($self));
       });
       const root = {};
       for (const field in result.root) {
@@ -60,11 +59,10 @@ export class RestStore extends Storage {
     .then(() => this[$axios].get(`/${t.$name}/${id}`))
     .then((response) => {
       const result = this[$json].parse(response.data);
-      result.extended.forEach(item => {
-        // item.type is currently just a string.
-        // TODO: Figure out how to make it an actual Type
-        // OR change how notifyUpdate works
-        this.notifyUpdate(item.type, item.id, item, item.type.$include.concat($self));
+      result.extended.forEach((item, index) => {
+        const schema = this[$json].schema(item.type);
+        const childRelationships = response.data.included[index].relationships;
+        this.notifyUpdate(schema, item.id, item, Object.keys(childRelationships).concat($self));
       });
       const root = {};
       for (const field in result.root) {

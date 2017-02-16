@@ -19,80 +19,112 @@ function mockup(t) {
 
       if (config.method === 'get') {
         if (matchBase) {
-          return backingStore.query();
+          return Promise.all([
+            backingStore.query(),
+            Promise.resolve([]),
+          ]);
         } else if (matchItem) {
-          return backingStore.read(t, parseInt(matchItem[1], 10));
+          return Promise.all([
+            backingStore.read(t, parseInt(matchItem[1], 10)),
+            Promise.resolve([{
+              type: t.$name,
+              id: 2,
+              name: 'frotato',
+              extended: {},
+            }]),
+          ]);
         } else if (matchSideBase) {
           apiWrap = false;
-          return backingStore.read(t, parseInt(matchSideBase[1], 10), matchSideBase[2]);
+          return Promise.all([
+            backingStore.read(t, parseInt(matchSideBase[1], 10), matchSideBase[2]),
+            Promise.resolve([]),
+          ]);
         }
       } else if (config.method === 'post') {
         if (matchBase) {
-          return backingStore.write(t, JSON.parse(config.data));
+          return Promise.all([
+            backingStore.write(t, JSON.parse(config.data)),
+            Promise.resolve([]),
+          ]);
         }
       } else if (config.method === 'patch') {
         if (matchItem) {
-          return backingStore.write(
-            t,
-            Object.assign(
-              {},
-              JSON.parse(config.data),
-              { [t.$id]: parseInt(matchItem[1], 10) }
-            )
-          );
+          return Promise.all([
+            backingStore.write(
+              t,
+              Object.assign(
+                {},
+                JSON.parse(config.data),
+                { [t.$id]: parseInt(matchItem[1], 10) }
+              )
+            ),
+            Promise.resolve([]),
+          ]);
         } else if (matchSideItem) {
-          return backingStore.modifyRelationship(
-            t,
-            parseInt(matchSideItem[1], 10),
-            matchSideItem[2],
-            parseInt(matchSideItem[3], 10),
-            JSON.parse(config.data)
-          );
+          return Promise.all([
+            backingStore.modifyRelationship(
+              t,
+              parseInt(matchSideItem[1], 10),
+              matchSideItem[2],
+              parseInt(matchSideItem[3], 10),
+              JSON.parse(config.data)
+            ),
+            Promise.resolve([]),
+          ]);
         }
       } else if (config.method === 'put') {
         if (matchSideBase) {
           apiWrap = false;
           const relationshipBlock = t.$fields[matchSideBase[2]];
           const sideInfo = relationshipBlock.relationship.$sides[matchSideBase[2]];
-          return backingStore.add(
-            t,
-            parseInt(matchSideBase[1], 10),
-            matchSideBase[2],
-            JSON.parse(config.data)[sideInfo.other.field],
-            JSON.parse(config.data)
-          );
+          return Promise.all([
+            backingStore.add(
+              t,
+              parseInt(matchSideBase[1], 10),
+              matchSideBase[2],
+              JSON.parse(config.data)[sideInfo.other.field],
+              JSON.parse(config.data)
+            ),
+            Promise.resolve([]),
+          ]);
         }
       } else if (config.method === 'delete') {
         if (matchItem) {
-          return backingStore.delete(t, parseInt(matchItem[1], 10));
+          return Promise.all([
+            backingStore.delete(t, parseInt(matchItem[1], 10)),
+            Promise.resolve([]),
+          ]);
         } else if (matchSideItem) {
           apiWrap = false;
-          return backingStore.remove(
-            t,
-            parseInt(matchSideItem[1], 10),
-            matchSideItem[2],
-            parseInt(matchSideItem[3], 10)
-          );
+          return Promise.all([
+            backingStore.remove(
+              t,
+              parseInt(matchSideItem[1], 10),
+              matchSideItem[2],
+              parseInt(matchSideItem[3], 10)
+            ),
+            Promise.resolve([]),
+          ]);
         }
       }
       return Promise.reject({ response: { status: 400 } });
-    }).then((d) => {
+    }).then(([data, extended]) => {
       // console.log('FOR');
       // console.log(config);
       // console.log(`RESOLVING ${JSON.stringify(d)}`);
-      if (d) {
+      if (data) {
         if (apiWrap) {
           const root = Object.assign(
             {},
-            d,
+            data,
             { type: t.$name }
           );
           return {
-            data: api.encode({ root, extended: [] }),
+            data: api.encode({ root, extended }),
           };
         } else {
           return {
-            data: d,
+            data,
           };
         }
       } else {

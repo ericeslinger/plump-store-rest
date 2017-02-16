@@ -1,11 +1,12 @@
 /* eslint-env node, mocha*/
 /* eslint no-shadow: 0 */
 
+import * as Bluebird from 'bluebird';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import { RestStore } from '../rest';
-import { testSuite, TestType } from 'plump';
+import { MemoryStore, Plump, testSuite, TestType } from 'plump';
 import axiosMock from './axiosMocking';
 
 chai.use(chaiAsPromised);
@@ -52,40 +53,59 @@ describe('JSON API', () => {
     });
   });
 
-  it('should cache all included data from response');
-  // , () => {
-  //   const rest = new RestStore({
-  //     terminal: true,
-  //     axios: axiosMock.mockup(TestType),
-  //   });
-  //   const one = {
-  //     type: TestType.$name,
-  //     id: 1,
-  //     name: 'potato',
-  //     extended: {},
-  //     children: [{ parent_id: 1, child_id: 2 }],
-  //   };
-  //   const two = {
-  //     type: TestType.$name,
-  //     id: 2,
-  //     name: 'frotato',
-  //     extended: { extension: 'yes' },
-  //     children: [{ parent_id: 2, child_id: 3 }],
-  //   };
-  //   const three = {
-  //     type: TestType.$name,
-  //     id: 3,
-  //     name: 'rutabaga',
-  //     extended: {},
-  //   };
-  //   return Bluebird.all([
-  //     rest.write(TestType, one),
-  //     rest.write(TestType, two),
-  //     rest.write(TestType, three),
-  //   ]).then(() => {
-  //     return rest.rest(TestType, 1);
-  //   }).then(() => {
-  //
-  //   });
-  // });
+  it('should cache all included data from response', () => {
+    let cache;
+    let plump;
+    TestType.$include = {
+      children: {
+        attributes: ['name', 'extended'],
+        relationships: ['children'],
+        depth: Infinity,
+      },
+    };
+    const one = {
+      type: TestType.$name,
+      id: 1,
+      name: 'potato',
+      extended: {},
+      children: [{ id: 2 }],
+    };
+    const two = {
+      type: TestType.$name,
+      id: 2,
+      name: 'frotato',
+      extended: {},
+    };
+
+    const rest = new RestStore({
+      terminal: true,
+      axios: axiosMock.mockup(TestType),
+      schemata: TestType.toJSON(),
+    });
+
+    return Bluebird.all([
+      rest.write(TestType, one),
+      rest.write(TestType, two),
+    ]).then(() => {
+      return Bluebird.all([
+        expect(rest.read(TestType, one.id)).to.eventually.have.property('name', one.name),
+        expect(rest.read(TestType, two.id)).to.eventually.have.property('name', two.name),
+      ]);
+    }).then(() => {
+      cache = new MemoryStore();
+      plump = new Plump({ storage: [rest, cache], types: [TestType] });
+      return Bluebird.all([
+        expect(cache.read(TestType, one.id)).to.eventually.be.null,
+        expect(cache.read(TestType, two.id)).to.eventually.be.null,
+      ]);
+    }).then(() => {
+      return rest.read(TestType, one.id);
+    }).then(() => {
+      return expect(cache.read(TestType, two.id)).to.eventually.have.property('name', two.name);
+    }).finally(() => {
+      if (plump) {
+        plump.teardown();
+      }
+    });
+  });
 });
