@@ -54,7 +54,7 @@ export class RestStore extends Storage {
     .then((result) => this.notifyUpdate(t, result[t.$id], result).then(() => result));
   }
 
-  readOne(t, id) {
+  readAttributes(t, id) {
     return Promise.resolve()
     .then(() => this[$axios].get(`/${t.$name}/${id}`))
     .then((response) => {
@@ -80,7 +80,7 @@ export class RestStore extends Storage {
     });
   }
 
-  readMany(t, id, relationship) {
+  readRelationship(t, id, relationship) {
     return this[$axios].get(`/${t.$name}/${id}/${relationship}`)
     .then((response) => response.data)
     .catch((err) => {
