@@ -5,8 +5,10 @@ import * as Bluebird from 'bluebird';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import { RestStore } from '../rest';
-import { MemoryStore, Plump, testSuite, TestType } from 'plump';
+import { RestStore } from '../src/index';
+import { MemoryStore, Plump } from 'plump';
+import { TestType } from 'plump/test/testType';
+import { testSuite } from 'plump/test/storageTests';
 import axiosMock from './axiosMocking';
 
 chai.use(chaiAsPromised);
