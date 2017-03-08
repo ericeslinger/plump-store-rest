@@ -53,7 +53,6 @@ export class RestStore extends Storage {
   read(t, id) {
     return this[$axios].get(`/${t.$name}/${id}`)
     .then(response => {
-      debugger;
       for (const item of response.included) {
         const schema = this[$schemata][item.type];
         const fields = ['attributes'].concat(Object.keys(item.relationships));
@@ -72,45 +71,28 @@ export class RestStore extends Storage {
     });
   }
 
-  // readAttributes(t, id) {
-  //   return Promise.resolve()
-  //   .then(() => this[$axios].get(`/${t.$name}/${id}`))
-  //   .then(response => {
-  //     const payload = response.data;
-  //     payload.included.forEach(item => {
-  //       const schema = item.type;
-  //       const updatedFields = Object.keys(item.relationships).concat('attributes');
-  //       this.notifyUpdate(schema, item.id, item, updatedFields);
-  //     });
-  //     return; // TODO!!!!!
-  //   }).catch((err) => {
-  //     if (err.response && err.response.status === 404) {
-  //       return null;
-  //     } else {
-  //       throw err;
-  //     }
-  //   });
-  // }
-  //
-  // readRelationship(t, id, relationship) {
-  //   return this[$axios].get(`/${t.$name}/${id}/${relationship}`)
-  //   .then(response => response.data)
-  //   .catch((err) => {
-  //     if (err.response && err.response.status === 404) {
-  //       return [];
-  //     } else {
-  //       throw err;
-  //     }
-  //   });
-  // }
+  readAttributes(t, id) {
+    return this.read(t, id)
+    .then(item => item ? item.attributes : null)
+    .catch(err => {
+      throw err;
+    });
+  }
+
+  readRelationship(t, id, relationship) {
+    return this.read(t, id)
+    .then(item => item ? item.relationships[relationship] : null)
+    .catch(err => {
+      throw err;
+    });
+  }
 
   add(type, id, relationshipTitle, childId, extras) {
-    const relationshipBlock = type.$fields[relationshipTitle].relationship;
-    const sideInfo = relationshipBlock.$sides[relationshipTitle];
-    const newField = { [sideInfo.self.field]: id, [sideInfo.other.field]: childId };
+    const relationshipBlock = type.$schema.relationships[relationshipTitle].type;
+    const newField = { id };
     if (relationshipBlock.$extras) {
-      for (const extra in relationshipBlock.$extras) {
-        if (extra in extras) {
+      for (const extra in extras) {
+        if (extra in relationshipBlock.$extras) {
           newField[extra] = extras[extra];
         }
       }
