@@ -9,7 +9,13 @@ function handleGet(t, request) {
   if (request.relationship && !request.childId) {
     resolves.push(backingStore.read(t, request.id, request.relationship));
   } else if (request.id) {
-    resolves.push(backingStore.read(t, request.id));
+    resolves.push(
+      backingStore.read(
+        t,
+        request.id,
+        ['attributes'].concat(Object.keys(t.$schema.relationships))
+      )
+    );
     resolves.push(
       Bluebird.resolve([
         {
@@ -71,7 +77,7 @@ function handlePut(t, request, data) {
         request.id,
         request.relationship,
         data.id,
-        data.extras
+        data.meta
       )
     );
   }
@@ -81,20 +87,20 @@ function handlePut(t, request, data) {
 function handleDelete(t, request) {
   const resolves = [];
   if (request.childId) {
-    resolves.push(backingStore.delete(t, request.id, request.relationship, request.childId));
+    resolves.push(backingStore.remove(t, request.id, request.relationship, request.childId));
   } else if (request.id && !request.relationship) {
     resolves.push(backingStore.delete(t, request.id));
   }
   return Bluebird.all(resolves);
 }
 
-function oneOf(getter, list) {
-  return list
-    .filter(item => item && item instanceof Object)
-    .reduce((acc, curr) => {
-      return acc === undefined ? getter(curr) : acc;
-    }, undefined);
-}
+// function oneOf(getter, list) {
+//   return list
+//     .filter(item => item && item instanceof Object)
+//     .reduce((acc, curr) => {
+//       return acc === undefined ? getter(curr) : acc;
+//     }, undefined);
+// }
 
 function mockup(t) {
   const mockedAxios = axios.create({ baseURL: '' });
@@ -105,25 +111,13 @@ function mockup(t) {
       const matchItem = config.url.match(new RegExp(`^/${t.$name}/(\\d+)$`));
       const matchSideBase = config.url.match(new RegExp(`^/${t.$name}/(\\d+)/(\\w+)$`));
       const matchSideItem = config.url.match(new RegExp(`^/${t.$name}/(\\d+)/(\\w+)/(\\d+)$`));
+      const match = matchSideItem || matchSideBase || matchItem || matchBase || [];
 
       const request = {
-        typeCheck: !!matchBase,
-        id: parseInt(
-          oneOf(
-            array => array[1],
-            [matchSideItem, matchSideBase, matchItem]
-          ), 10
-        ),
-        relationship: oneOf(
-          array => array[2],
-          [matchSideItem, matchSideBase]
-        ),
-        childId: parseInt(
-          oneOf(
-            array => array[3],
-            [matchSideItem]
-          ), 10
-        ),
+        typeCheck: match.length === 1,
+        id: parseInt(match[1], 10),
+        relationship: match[2],
+        childId: parseInt(match[3], 10),
       };
       const data = config.data ? JSON.parse(config.data) : undefined;
 

@@ -50,7 +50,8 @@ export class RestStore extends Storage {
     });
   }
 
-  read(t, id) {
+  read(t, id, opts) {
+    const keys = opts && !Array.isArray(opts) ? [opts] : opts;
     return this[$axios].get(`/${t.$name}/${id}`)
     .then(response => {
       for (const item of response.included) {
@@ -61,7 +62,19 @@ export class RestStore extends Storage {
         }
         this.notifyUpdate(schema, item.id, item, fields);
       }
-      return response.data;
+      const item = response.data;
+      const retVal = { type: item.type, id: item.id, attributes: item.attributes };
+      if (keys) {
+        retVal.relationships = {};
+        for (const key of keys) {
+          if (key in item.relationships) {
+            retVal.relationships[key] = item.relationships[key];
+          }
+        }
+      } else {
+        retVal.relationships = item.relationships;
+      }
+      return retVal;
     }).catch(err => {
       if (err.response && err.response.status === 404) {
         return null;
@@ -79,21 +92,34 @@ export class RestStore extends Storage {
     });
   }
 
-  readRelationship(t, id, relationship) {
+  readRelationships(t, id, relationships) {
+    const keys = Array.isArray(relationships) ? relationships : [relationships];
     return this.read(t, id)
-    .then(item => item ? item.relationships[relationship] : null)
-    .catch(err => {
-      throw err;
+    .then(item => {
+      if (item) {
+        const retVal = {};
+        for (const key of keys) {
+          retVal[key] = item.relationships[key];
+        }
+        return retVal;
+      } else {
+        return null;
+      }
     });
+  }
+
+  readRelationship(t, id, relationship) {
+    return this.readRelationships(t, id, relationship);
   }
 
   add(type, id, relationshipTitle, childId, extras) {
     const relationshipBlock = type.$schema.relationships[relationshipTitle].type;
-    const newField = { id };
+    const newField = { id: childId };
     if (relationshipBlock.$extras) {
       for (const extra in extras) {
         if (extra in relationshipBlock.$extras) {
-          newField[extra] = extras[extra];
+          newField.meta = newField.meta || {};
+          newField.meta[extra] = extras[extra];
         }
       }
     }
