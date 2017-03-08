@@ -1,6 +1,6 @@
 import { BaseController } from 'plump-strut';
 
-import { TestType } from './testType';
+import { TestType } from 'plump/test/testType';
 
 export class TestController extends BaseController {
   constructor(plump) {

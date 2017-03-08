@@ -2,17 +2,19 @@
 
 import * as Hapi from 'hapi';
 import chai from 'chai';
+import chaiSubset from 'chai-subset';
 import chaiAsPromised from 'chai-as-promised';
 import Bluebird from 'bluebird';
 
 import { Plump, MemoryStore } from 'plump';
+import { TestType } from 'plump/test/testType';
 import { RestStore } from '../src/rest';
-import { TestType } from './testType';
 import { TestController } from './testController';
 
 
-const expect = chai.expect;
+chai.use(chaiSubset);
 chai.use(chaiAsPromised);
+const expect = chai.expect;
 
 const terminal = new MemoryStore({ terminal: true });
 const backendPlump = new Plump({ types: [TestType], storage: [terminal] });
@@ -49,14 +51,14 @@ describe('Plump Rest Integration', () => {
     });
   });
 
-  describe('Basic CRUD', () => {
+  describe('attribute CRUD', () => {
     it('C');
     it('R');
     it('U');
     it('D');
   });
 
-  describe('Relationship CRUD', () => {
+  describe('relationship CRUD', () => {
     it('C');
     it('R');
     it('U');
