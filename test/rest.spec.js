@@ -21,7 +21,7 @@ testSuite({
   opts: {
     terminal: true,
     axios: axiosMock.mockup(TestType),
-    schemata: TestType.toJSON(),
+    schemata: [TestType.toJSON()],
   },
   name: 'Plump Rest Store',
 });

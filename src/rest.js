@@ -1,9 +1,8 @@
 import * as axios from 'axios';
-import { Storage, $self } from 'plump';
-import { JSONApi } from 'plump-json-api';
+import { Storage } from 'plump';
 
 const $axios = Symbol('$axios');
-const $json = Symbol('$json');
+const $schemata = Symbol('$schemata');
 import Promise from 'bluebird';
 
 export class RestStore extends Storage {
@@ -11,14 +10,23 @@ export class RestStore extends Storage {
     super(opts);
     const options = Object.assign(
       {},
-      {
-        baseURL: 'http://localhost/api',
-        schemata: [],
-      },
+      { baseURL: 'http://localhost/api', schemata: [] },
       opts
     );
     this[$axios] = options.axios || axios.create(options);
-    this[$json] = new JSONApi({ schemata: options.schemata, baseURL: options.baseURL });
+    this[$schemata] = {};
+    for (const schema of options.schemata) {
+      this.addSchema(schema);
+    }
+    // options.schemata.forEach(this.addSchema);
+  }
+
+  addSchema(schema) {
+    if (this[$schemata][schema.$name]) {
+      throw new Error(`Attempting to register duplicate type: ${schema.$name}`);
+    } else {
+      this[$schemata][schema.$name] = schema;
+    }
   }
 
   rest(options) {
@@ -36,42 +44,26 @@ export class RestStore extends Storage {
         throw new Error('Cannot create new content in a non-terminal store');
       }
     })
-    .then((response) => {
-      const result = this[$json].parse(response.data);
-      result.extended.forEach((item, index) => {
-        const schema = this[$json].schema(item.type);
-        const childRelationships = response.data.included[index].relationships;
-        this.notifyUpdate(schema, item.id, item, Object.keys(childRelationships).concat($self));
-      });
-      const root = {};
-      for (const field in result.root) {
-        if (field !== 'type') {
-          root[field] = result.root[field];
-        }
-      }
-      return root;
-    })
-    .then((result) => this.notifyUpdate(t, result[t.$id], result).then(() => result));
+    .then(response => {
+      const data = response.data;
+      return this.notifyUpdate(t, data.id, data).then(() => data);
+    });
   }
 
-  readAttributes(t, id) {
-    return Promise.resolve()
-    .then(() => this[$axios].get(`/${t.$name}/${id}`))
-    .then((response) => {
-      const result = this[$json].parse(response.data);
-      result.extended.forEach((item, index) => {
-        const schema = this[$json].schema(item.type);
-        const childRelationships = response.data.included[index].relationships;
-        this.notifyUpdate(schema, item.id, item, Object.keys(childRelationships).concat($self));
-      });
-      const root = {};
-      for (const field in result.root) {
-        if (field !== 'type') {
-          root[field] = result.root[field];
+  read(t, id) {
+    return this[$axios].get(`/${t.$name}/${id}`)
+    .then(response => {
+      debugger;
+      for (const item of response.included) {
+        const schema = this[$schemata][item.type];
+        const fields = ['attributes'].concat(Object.keys(item.relationships));
+        if (!schema) {
+          console.warn(`RestStore received unknown type '${item.type}' in HTTP response`);
         }
+        this.notifyUpdate(schema, item.id, item, fields);
       }
-      return root;
-    }).catch((err) => {
+      return response.data;
+    }).catch(err => {
       if (err.response && err.response.status === 404) {
         return null;
       } else {
@@ -80,26 +72,48 @@ export class RestStore extends Storage {
     });
   }
 
-  readRelationship(t, id, relationship) {
-    return this[$axios].get(`/${t.$name}/${id}/${relationship}`)
-    .then((response) => response.data)
-    .catch((err) => {
-      if (err.response && err.response.status === 404) {
-        return [];
-      } else {
-        throw err;
-      }
-    });
-  }
+  // readAttributes(t, id) {
+  //   return Promise.resolve()
+  //   .then(() => this[$axios].get(`/${t.$name}/${id}`))
+  //   .then(response => {
+  //     const payload = response.data;
+  //     payload.included.forEach(item => {
+  //       const schema = item.type;
+  //       const updatedFields = Object.keys(item.relationships).concat('attributes');
+  //       this.notifyUpdate(schema, item.id, item, updatedFields);
+  //     });
+  //     return; // TODO!!!!!
+  //   }).catch((err) => {
+  //     if (err.response && err.response.status === 404) {
+  //       return null;
+  //     } else {
+  //       throw err;
+  //     }
+  //   });
+  // }
+  //
+  // readRelationship(t, id, relationship) {
+  //   return this[$axios].get(`/${t.$name}/${id}/${relationship}`)
+  //   .then(response => response.data)
+  //   .catch((err) => {
+  //     if (err.response && err.response.status === 404) {
+  //       return [];
+  //     } else {
+  //       throw err;
+  //     }
+  //   });
+  // }
 
   add(type, id, relationshipTitle, childId, extras) {
-    const relationshipBlock = type.$fields[relationshipTitle];
-    const sideInfo = relationshipBlock.relationship.$sides[relationshipTitle];
+    const relationshipBlock = type.$fields[relationshipTitle].relationship;
+    const sideInfo = relationshipBlock.$sides[relationshipTitle];
     const newField = { [sideInfo.self.field]: id, [sideInfo.other.field]: childId };
-    if (relationshipBlock.relationship.$extras) {
-      Object.keys(relationshipBlock.relationship.$extras).forEach((extra) => {
-        newField[extra] = extras[extra];
-      });
+    if (relationshipBlock.$extras) {
+      for (const extra in relationshipBlock.$extras) {
+        if (extra in extras) {
+          newField[extra] = extras[extra];
+        }
+      }
     }
     return this[$axios].put(`/${type.$name}/${id}/${relationshipTitle}`, newField)
     .then(() => this.notifyUpdate(type, id, null, relationshipTitle));
@@ -117,15 +131,15 @@ export class RestStore extends Storage {
 
   delete(t, id) {
     return this[$axios].delete(`/${t.$name}/${id}`)
-    .then((response) => {
-      return response.data;
+    .then(response => {
+      return response.data.data;
     });
   }
 
   query(q) {
     return this[$axios].get(`/${q.type}`, { params: q.query })
-    .then((response) => {
-      return response.data;
+    .then(response => {
+      return response.data.data;
     });
   }
 }
