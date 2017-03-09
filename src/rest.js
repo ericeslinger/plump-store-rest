@@ -43,10 +43,11 @@ export class RestStore extends Storage {
       } else {
         throw new Error('Cannot create new content in a non-terminal store');
       }
-    })
-    .then(response => {
+    }).then(response => {
       const data = response.data;
       return this.notifyUpdate(t, data.id, data).then(() => data);
+    }).catch(err => {
+      throw err;
     });
   }
 
@@ -105,6 +106,8 @@ export class RestStore extends Storage {
       } else {
         return null;
       }
+    }).catch(err => {
+      throw err;
     });
   }
 
