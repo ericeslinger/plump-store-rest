@@ -1,134 +1,147 @@
 import { MemoryStore } from 'plump';
 import * as axios from 'axios';
-import Promise from 'bluebird';
-import { JSONApi } from 'plump-json-api';
+import * as Bluebird from 'bluebird';
 
 const backingStore = new MemoryStore({ terminal: true });
 
+function handleGet(t, request) {
+  const resolves = [];
+  if (request.relationship && !request.childId) {
+    resolves.push(backingStore.read(t, request.id, request.relationship));
+  } else if (request.id) {
+    resolves.push(
+      backingStore.read(
+        t,
+        request.id,
+        ['attributes'].concat(Object.keys(t.$schema.relationships))
+      )
+    );
+    resolves.push(
+      Bluebird.resolve([
+        {
+          type: t.$name,
+          id: 2,
+          attributes: {
+            name: 'frotato',
+            extended: {},
+          },
+          relationships: {},
+        },
+      ])
+    );
+  } else if (request.typeCheck) {
+    resolves.push(backingStore.query());
+  }
+  return Bluebird.all(resolves);
+}
+
+function handlePost(t, request, data) {
+  const resolves = [];
+  if (request.typeCheck && !request.id) {
+    resolves.push(backingStore.write(t, data));
+  }
+  return Bluebird.all(resolves);
+}
+
+function handlePatch(t, request, data) {
+  const resolves = [];
+  if (request.childId) {
+    resolves.push(
+      backingStore.modifyRelationship(
+        t,
+        request.id,
+        request.relationship,
+        request.childId,
+        data
+      )
+    );
+  } else if (request.id && !request.relationship) {
+    resolves.push(backingStore.write(
+      t,
+      Object.assign(
+        {},
+        data,
+        { id: request.id }
+      )
+    ));
+  }
+  return Bluebird.all(resolves);
+}
+
+function handlePut(t, request, data) {
+  const resolves = [];
+  if (request.relationship && !request.childId) {
+    resolves.push(
+      backingStore.add(
+        t,
+        request.id,
+        request.relationship,
+        data.id,
+        data.meta
+      )
+    );
+  }
+  return Bluebird.all(resolves);
+}
+
+function handleDelete(t, request) {
+  const resolves = [];
+  if (request.childId) {
+    resolves.push(backingStore.remove(t, request.id, request.relationship, request.childId));
+  } else if (request.id && !request.relationship) {
+    resolves.push(backingStore.delete(t, request.id));
+  }
+  return Bluebird.all(resolves);
+}
+
+// function oneOf(getter, list) {
+//   return list
+//     .filter(item => item && item instanceof Object)
+//     .reduce((acc, curr) => {
+//       return acc === undefined ? getter(curr) : acc;
+//     }, undefined);
+// }
+
 function mockup(t) {
-  const api = new JSONApi({ schemata: t.toJSON() });
   const mockedAxios = axios.create({ baseURL: '' });
   mockedAxios.defaults.adapter = (config) => {
-    let apiWrap = true; // should we wrap in standard JSON API at the bottom
-    return Promise.resolve().then(() => {
+    return Bluebird.resolve().then(() => {
+      const method = config.method;
       const matchBase = config.url.match(new RegExp(`^/${t.$name}$`));
       const matchItem = config.url.match(new RegExp(`^/${t.$name}/(\\d+)$`));
       const matchSideBase = config.url.match(new RegExp(`^/${t.$name}/(\\d+)/(\\w+)$`));
       const matchSideItem = config.url.match(new RegExp(`^/${t.$name}/(\\d+)/(\\w+)/(\\d+)$`));
+      const match = matchSideItem || matchSideBase || matchItem || matchBase || [];
 
+      const request = {
+        typeCheck: match.length === 1,
+        id: parseInt(match[1], 10),
+        relationship: match[2],
+        childId: parseInt(match[3], 10),
+      };
+      const data = config.data ? JSON.parse(config.data) : undefined;
 
-      if (config.method === 'get') {
-        if (matchBase) {
-          return Promise.all([
-            backingStore.query(),
-            Promise.resolve([]),
-          ]);
-        } else if (matchItem) {
-          return Promise.all([
-            backingStore.read(t, parseInt(matchItem[1], 10)),
-            Promise.resolve([{
-              type: t.$name,
-              id: 2,
-              name: 'frotato',
-              extended: {},
-            }]),
-          ]);
-        } else if (matchSideBase) {
-          apiWrap = false;
-          return Promise.all([
-            backingStore.read(t, parseInt(matchSideBase[1], 10), matchSideBase[2]),
-            Promise.resolve([]),
-          ]);
-        }
-      } else if (config.method === 'post') {
-        if (matchBase) {
-          return Promise.all([
-            backingStore.write(t, JSON.parse(config.data)),
-            Promise.resolve([]),
-          ]);
-        }
-      } else if (config.method === 'patch') {
-        if (matchItem) {
-          return Promise.all([
-            backingStore.write(
-              t,
-              Object.assign(
-                {},
-                JSON.parse(config.data),
-                { [t.$id]: parseInt(matchItem[1], 10) }
-              )
-            ),
-            Promise.resolve([]),
-          ]);
-        } else if (matchSideItem) {
-          return Promise.all([
-            backingStore.modifyRelationship(
-              t,
-              parseInt(matchSideItem[1], 10),
-              matchSideItem[2],
-              parseInt(matchSideItem[3], 10),
-              JSON.parse(config.data)
-            ),
-            Promise.resolve([]),
-          ]);
-        }
-      } else if (config.method === 'put') {
-        if (matchSideBase) {
-          apiWrap = false;
-          const relationshipBlock = t.$fields[matchSideBase[2]];
-          const sideInfo = relationshipBlock.relationship.$sides[matchSideBase[2]];
-          return Promise.all([
-            backingStore.add(
-              t,
-              parseInt(matchSideBase[1], 10),
-              matchSideBase[2],
-              JSON.parse(config.data)[sideInfo.other.field],
-              JSON.parse(config.data)
-            ),
-            Promise.resolve([]),
-          ]);
-        }
-      } else if (config.method === 'delete') {
-        if (matchItem) {
-          return Promise.all([
-            backingStore.delete(t, parseInt(matchItem[1], 10)),
-            Promise.resolve([]),
-          ]);
-        } else if (matchSideItem) {
-          apiWrap = false;
-          return Promise.all([
-            backingStore.remove(
-              t,
-              parseInt(matchSideItem[1], 10),
-              matchSideItem[2],
-              parseInt(matchSideItem[3], 10)
-            ),
-            Promise.resolve([]),
-          ]);
-        }
+      if (method === 'get') {
+        return handleGet(t, request, data);
+      } else if (method === 'post') {
+        return handlePost(t, request, data);
+      } else if (method === 'patch') {
+        return handlePatch(t, request, data);
+      } else if (method === 'put') {
+        return handlePut(t, request, data);
+      } else if (method === 'delete') {
+        return handleDelete(t, request, data);
       }
-      return Promise.reject({ response: { status: 400 } });
-    }).then(([data, extended]) => {
-      // console.log('FOR');
-      // console.log(config);
-      // console.log(`RESOLVING ${JSON.stringify(d)}`);
+      return Bluebird.reject({ response: { status: 400 } });
+    }).then(([data, included]) => {
       if (data) {
-        if (apiWrap) {
-          const root = Object.assign(
-            {},
-            data,
-            { type: t.$name }
-          );
-          return {
-            data: api.encode({ root, extended }),
-          };
-        } else {
-          return {
-            data,
-          };
+        const retVal = { data };
+        if (included) {
+          retVal.included = included;
         }
+        return retVal;
       } else {
-        return Promise.reject({ response: { status: 404 } });
+        return Bluebird.reject({ response: { status: 404 } });
       }
     });
   };
