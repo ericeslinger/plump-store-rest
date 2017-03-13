@@ -1,9 +1,9 @@
 import * as axios from 'axios';
+import * as Bluebird from 'bluebird';
+import mergeOptions from 'merge-options';
 import { Storage } from 'plump';
 
 const $axios = Symbol('$axios');
-const $schemata = Symbol('$schemata');
-import Promise from 'bluebird';
 
 export class RestStore extends Storage {
   constructor(opts = {}) {
@@ -14,19 +14,6 @@ export class RestStore extends Storage {
       opts
     );
     this[$axios] = options.axios || axios.create(options);
-    this[$schemata] = {};
-    for (const schema of options.schemata) {
-      this.addSchema(schema);
-    }
-    // options.schemata.forEach(this.addSchema);
-  }
-
-  addSchema(schema) {
-    if (this[$schemata][schema.$name]) {
-      throw new Error(`Attempting to register duplicate type: ${schema.$name}`);
-    } else {
-      this[$schemata][schema.$name] = schema;
-    }
   }
 
   rest(options) {
@@ -34,36 +21,69 @@ export class RestStore extends Storage {
   }
 
   write(t, v) {
-    return Promise.resolve()
-    .then(() => {
-      if (v[t.$id]) {
-        return this[$axios].patch(`/${t.$name}/${v[t.$id]}`, v);
-      } else if (this.terminal) {
-        return this[$axios].post(`/${t.$name}`, v);
+    return this.writeAttributes(t, v).then(attrResponse => {
+      const updated = attrResponse.data;
+      if (v.relationships) {
+        const relNames = Object.keys(v.relationships);
+        return Bluebird.all(
+          relNames.map(relName => this.writeRelationship(t, v, relName))
+        ).then(responses => {
+          return responses.reduce((acc, curr, idx) => {
+            return mergeOptions(acc, { relationships: { [relNames[idx]]: [curr] } });
+          }, updated);
+        });
       } else {
-        throw new Error('Cannot create new content in a non-terminal store');
+        return updated;
       }
-    }).then(response => {
-      const data = response.data;
-      return this.notifyUpdate(t, data.id, data).then(() => data);
+    // TODO: cache written data
+    // }).then(data => {
+    //   return this.notifyUpdate(t, data.id, data).then(() => data);
     }).catch(err => {
       throw err;
     });
+  }
+
+  writeAttributes(type, value) {
+    if (value.id) {
+      return this[$axios].patch(`/${type.$name}/${value.id}`, value);
+    } else if (this.terminal) {
+      return this[$axios].post(`/${type.$name}`, value);
+    } else {
+      throw new Error('Cannot create new content in a non-terminal store');
+    }
+  }
+
+  // TODO: Reduce the relationship deltas into
+  // a list of things that can be resolved in parallel, then Bluebird.all them
+  writeRelationship(type, value, relationship) {
+    const selfRoute = `/${type.$name}/${value.id}`;
+    return value.relationships[relationship]
+      .reduce((thenable, curr) => {
+        return thenable.then(() => {
+          if (curr.op === 'add') {
+            return this[$axios].put(`${selfRoute}/${relationship}`, curr.data);
+          } else if (curr.op === 'modify') {
+            // TODO: maybe redesign relationship deltas to make id top-level and 'data' into 'meta'
+            return this[$axios].patch(`${selfRoute}/${relationship}/${curr.data.id}`, curr);
+          } else if (curr.op === 'remove') {
+            return this[$axios].delete(`${selfRoute}/${relationship}/${curr.data.id}`);
+          } else {
+            throw new Error(`Unknown relationship delta op: ${curr.op}`);
+          }
+        }).catch(err => console.log(err));
+      }, Bluebird.resolve());
   }
 
   read(t, id, opts) {
     const keys = opts && !Array.isArray(opts) ? [opts] : opts;
     return this[$axios].get(`/${t.$name}/${id}`)
     .then(response => {
-      for (const item of response.included) {
-        const schema = this[$schemata][item.type];
-        const fields = ['attributes'].concat(Object.keys(item.relationships));
-        if (!schema) {
-          console.warn(`RestStore received unknown type '${item.type}' in HTTP response`);
-        }
-        this.notifyUpdate(schema, item.id, item, fields);
+      const result = response.data;
+      for (const item of result.included) {
+        // TODO: cache included data
+        console.log('INCLUDED:', item.type, item.id);
       }
-      const item = response.data;
+      const item = result.data;
       const retVal = { type: item.type, id: item.id, attributes: item.attributes };
       if (keys) {
         retVal.relationships = {};

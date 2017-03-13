@@ -41,6 +41,7 @@
     "hapi": "^16.1.0",
     "joi": "^10.2.2",
     "mocha": "^3.0.2",
+    "pg": "^6.1.4",
     "plump-strut": "kstf/plump-strut"
   },
   "peerDependencies": {
