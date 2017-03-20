@@ -1,10 +1,8 @@
 import * as axios from 'axios';
-import { Storage, $self } from 'plump';
-import { JSONApi } from 'plump-json-api';
+import { Storage } from 'plump';
 
 const $axios = Symbol('$axios');
-const $json = Symbol('$json');
-import Bluebird from 'bluebird';
+import Promise from 'bluebird';
 
 export class RestStore extends Storage {
   constructor(opts = {}) {
@@ -18,63 +16,45 @@ export class RestStore extends Storage {
       opts
     );
     this[$axios] = options.axios || axios.create(options);
-    this[$json] = new JSONApi({ schemata: options.schemata, baseURL: options.baseURL });
   }
 
   rest(options) {
     return this[$axios](options);
   }
 
-  write(typeName, v) {
-    const type = this.getType(typeName);
-    return Bluebird.resolve()
+  write(value) {
+    return Promise.resolve()
     .then(() => {
-      if (v.id) {
-        return this[$axios].patch(`/${type.$name}/${v.id}`, v);
+      if (value.id) {
+        return this[$axios].patch(`/${value.type}/${value.id}`, value);
       } else if (this.terminal) {
-        return this[$axios].post(`/${type.$name}`, v);
+        return this[$axios].post(`/${value.type}`, value);
       } else {
         throw new Error('Cannot create new content in a non-terminal store');
       }
     })
     .then((response) => {
-      const result = this[$json].parse(response.data).data;
+      const result = response.data.data;
+      this.fireWriteUpdate({
+        type: result.type,
+        id: result.id,
+        invalidate: ['attributes'],
+      });
       return result;
-      // return Bluebird.all(Object.keys(type.relationships).map((relName) => {
-      //   if (v.relationships && v.relationships[relName]) {
-      //     return Bluebird.all(v.relationships[relName].map((delta) => {
-      //       if (delta.op === 'add') {
-      //         return this.add(typeName, result.id, relName, delta.id, delta.meta)
-      //       }
-      //     }))
-      //   }
-      // }))
-      // result.extended.forEach((item, index) => {
-        // const schema = this[$json].schema(item.type);
-        // const childRelationships = response.data.included[index].relationships;
-        // this.notifyUpdate(schema, item.id, item, Object.keys(childRelationships).concat($self));
-      // });
-    })
-    .then((result) => this.notifyUpdate(typeName, result.id, result).then(() => result));
+    });
   }
 
-  readOne(typeName, id) {
-    return Bluebird.resolve()
-    .then(() => this[$axios].get(`/${typeName}/${id}`))
+  readAttributes(type, id) {
+    return Promise.resolve()
+    .then(() => this[$axios].get(`/${type.$name}/${id}`))
     .then((response) => {
-      const result = this[$json].parse(response.data);
-      result.extended.forEach((item, index) => {
-        const schema = this[$json].schema(item.type);
-        const childRelationships = response.data.included[index].relationships;
-        this.notifyUpdate(schema, item.id, item, Object.keys(childRelationships).concat($self));
-      });
-      const root = {};
-      for (const field in result.root) {
-        if (field !== 'type') {
-          root[field] = result.root[field];
-        }
+      const result = response.data.data;
+      if (response.data.included) {
+        response.data.included.forEach((item) => {
+          this.fireReadUpdate(item);
+        });
       }
-      return root;
+      return result;
     }).catch((err) => {
       if (err.response && err.response.status === 404) {
         return null;
@@ -84,9 +64,16 @@ export class RestStore extends Storage {
     });
   }
 
-  readMany(typeName, id, relationship) {
-    return this[$axios].get(`/${typeName}/${id}/${relationship}`)
-    .then((response) => response.data)
+  readRelationship(type, id, relationship) {
+    return this[$axios].get(`/${type.$name}/${id}/${relationship}`)
+    .then((response) => {
+      if (response.data.included) {
+        response.data.included.forEach((item) => {
+          this.fireReadUpdate(item);
+        });
+      }
+      return response.data.data;
+    })
     .catch((err) => {
       if (err.response && err.response.status === 404) {
         return [];
@@ -96,26 +83,44 @@ export class RestStore extends Storage {
     });
   }
 
-  add(typeName, id, relationshipTitle, childId, extras) {
+  add(typeName, id, relName, childId, extras) {
     const newField = { id: childId, meta: Object.assign({}, extras) };
-    return this[$axios].put(`/${typeName}/${id}/${relationshipTitle}`, newField)
-    .then(() => this.notifyUpdate(typeName, id, null, relationshipTitle));
+    return this[$axios].put(`/${typeName}/${id}/${relName}`, newField)
+    .then((res) => {
+      this.fireWriteUpdate({ type: typeName, id: id, invalidate: [relName] });
+      return res.data;
+    });
   }
 
-  remove(typeName, id, relationshipTitle, childId) {
-    return this[$axios].delete(`/${typeName}/${id}/${relationshipTitle}/${childId}`)
-    .then(() => this.notifyUpdate(typeName, id, null, relationshipTitle));
+  remove(typeName, id, relName, childId) {
+    return this[$axios].delete(`/${typeName}/${id}/${relName}/${childId}`)
+    .then((res) => {
+      this.fireWriteUpdate({ type: typeName, id: id, invalidate: [relName] });
+      return res.data;
+    });
   }
 
-  modifyRelationship(typeName, id, relationshipTitle, childId, extras) {
-    return this[$axios].patch(`/${typeName}/${id}/${relationshipTitle}/${childId}`, extras)
-    .then(() => this.notifyUpdate(typeName, id, null, relationshipTitle));
+  modifyRelationship(typeName, id, relName, childId, extras) {
+    return this[$axios].patch(`/${typeName}/${id}/${relName}/${childId}`, extras)
+    .then((res) => {
+      this.fireWriteUpdate({ type: typeName, id: id, invalidate: [relName] });
+      return res.data;
+    });
+  }
+
+  fireWriteUpdate(opts) {
+    return super.fireWriteUpdate(opts);
   }
 
   delete(typeName, id) {
     return this[$axios].delete(`/${typeName}/${id}`)
     .then((response) => {
-      return response.data;
+      this.fireWriteUpdate({
+        type: typeName,
+        id: id,
+        invalidate: ['attributes'],
+      });
+      return response.datas;
     });
   }
 

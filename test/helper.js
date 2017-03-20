@@ -1,3 +1,3 @@
 require('babel-register')({
-  ignore: /node_modules\/(?!plump)/,
+  ignore: /node_modules\/(?!plump.*)/,
 });

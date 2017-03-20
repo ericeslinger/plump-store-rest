@@ -1,5 +1,1 @@
-import { RestStore } from './rest';
-
-export {
-  RestStore,
-};
+export { RestStore } from './rest';
