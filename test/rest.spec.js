@@ -4,7 +4,7 @@
 import { RestStore } from '../src/index';
 import { TestType } from 'plump/test/testType';
 import { testSuite } from 'plump/test/storageTests';
-import axiosMock from './axiosMocking';
+import { MockAxios } from './axiosMocking';
 
 testSuite({
   describe, it, before, after,
@@ -12,7 +12,7 @@ testSuite({
   ctor: RestStore,
   opts: {
     terminal: true,
-    axios: axiosMock.mockup(TestType),
+    axios: new MockAxios(TestType).mockedAxios,
     schemata: [TestType.toJSON()],
   },
   name: 'Plump Rest Store',
