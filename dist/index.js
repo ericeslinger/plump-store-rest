@@ -1,11 +1,6 @@
-'use strict';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var rest_1 = require("./rest");
+exports.RestStore = rest_1.RestStore;
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.RestStore = undefined;
-
-var _rest = require('./rest');
-
-exports.RestStore = _rest.RestStore;
-//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImluZGV4LmpzIl0sIm5hbWVzIjpbIlJlc3RTdG9yZSJdLCJtYXBwaW5ncyI6Ijs7Ozs7OztBQUFBOztRQUdFQSxTIiwiZmlsZSI6ImluZGV4LmpzIiwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgUmVzdFN0b3JlIH0gZnJvbSAnLi9yZXN0JztcblxuZXhwb3J0IHtcbiAgUmVzdFN0b3JlLFxufTtcbiJdfQ==
+//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImluZGV4LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7O0FBQUEsK0JBQW1DO0FBQTFCLDJCQUFBLFNBQVMsQ0FBQSIsImZpbGUiOiJpbmRleC5qcyIsInNvdXJjZXNDb250ZW50IjpbImV4cG9ydCB7IFJlc3RTdG9yZSB9IGZyb20gJy4vcmVzdCc7XG4iXX0=
