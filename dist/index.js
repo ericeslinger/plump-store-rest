@@ -3,4 +3,4 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var rest_1 = require("./rest");
 exports.RestStore = rest_1.RestStore;
 
-//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImluZGV4LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7O0FBQUEsK0JBQW1DO0FBQTFCLDJCQUFBLFNBQVMsQ0FBQSIsImZpbGUiOiJpbmRleC5qcyIsInNvdXJjZXNDb250ZW50IjpbImV4cG9ydCB7IFJlc3RTdG9yZSB9IGZyb20gJy4vcmVzdCc7XG4iXX0=
+//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uL3NyYy9pbmRleC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOztBQUFBLCtCQUFtQztBQUExQiwyQkFBQSxTQUFTLENBQUEiLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgeyBSZXN0U3RvcmUgfSBmcm9tICcuL3Jlc3QnO1xuIl19
