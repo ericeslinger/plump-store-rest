@@ -3,7 +3,7 @@ import { Storage, StorageOptions, IndefiniteModelData, ModelData, ModelReference
 export declare class RestStore extends Storage implements TerminalStore {
     private axios;
     constructor(opts: StorageOptions & {
-        baseUrl?: string;
+        baseURL?: string;
         axios?: AxiosInstance;
     });
     writeAttributes(value: IndefiniteModelData): Promise<ModelData>;

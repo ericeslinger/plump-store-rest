@@ -3,7 +3,7 @@ import { Storage, StorageOptions, IndefiniteModelData, ModelData, ModelReference
 
 export class RestStore extends Storage implements TerminalStore {
   private axios;
-  constructor(opts: StorageOptions & { baseUrl?: string, axios?: AxiosInstance }) {
+  constructor(opts: StorageOptions & { baseURL?: string, axios?: AxiosInstance }) {
     super(opts);
     const options = Object.assign(
       {},
@@ -28,9 +28,9 @@ export class RestStore extends Storage implements TerminalStore {
       }
     })
     .then((response) => {
-      const result = response.data.data;
+      const result = response.data;
       this.fireWriteUpdate({
-        typeName: result.type,
+        typeName: result.typeName,
         id: result.id,
         invalidate: ['attributes'],
       });
@@ -41,15 +41,22 @@ export class RestStore extends Storage implements TerminalStore {
   readAttributes(item: ModelReference): Promise<ModelData> {
     return Promise.resolve()
     .then(() => this.axios.get(`/${item.typeName}/${item.id}`))
-    .then((response) => {
-      const result = response.data.data;
-      if (response.data.included) {
-        response.data.included.forEach((includedData) => {
-          this.fireReadUpdate(includedData);
-        });
+    .then((reply) => {
+      if (reply.status === 404) {
+        return null;
+      } else if (reply.status !== 200) {
+        throw new Error(reply.statusText);
+      } else {
+        const result = reply.data;
+        if (result.included) {
+          result.included.forEach((includedData) => {
+            this.fireReadUpdate(includedData);
+          });
+        }
+        return result;
       }
-      return result;
     }).catch((err) => {
+      console.log('promise rejection in rest');
       if (err.response && err.response.status === 404) {
         return null;
       } else {
@@ -66,7 +73,7 @@ export class RestStore extends Storage implements TerminalStore {
           this.fireReadUpdate(item);
         });
       }
-      return response.data.data;
+      return response.data;
     })
     .catch((err) => {
       if (err.response && err.response.status === 404) {
