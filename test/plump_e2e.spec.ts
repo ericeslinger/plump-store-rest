@@ -6,7 +6,7 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as mergeOptions from 'merge-options';
 
-import { Plump, IndefiniteModelData } from 'plump';
+import { Plump } from 'plump';
 import { PGStore } from 'plump-store-postgres';
 import { TestType } from './testType';
 import { RestStore } from '../src/rest';
@@ -14,7 +14,7 @@ import { BaseController } from 'plump-strut';
 
 import 'mocha';
 
-import { IPromise } from 'hapi';
+// import { IPromise } from 'hapi';
 
 declare module 'hapi' {
   interface Server {
@@ -29,12 +29,12 @@ declare module 'hapi' {
         routes?: {
             prefix: string; vhost?: string | string[]
         };
-    }): IPromise<any>;
+    }): Promise<any>;
   }
 }
 
 
-const TEST_PORT = parseInt(process.env.TEST_PORT, 10);
+const TEST_PORT = parseInt(process.env.TEST_PORT, 10) || 4000;
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -94,16 +94,16 @@ function createDatabase(name) {
   });
 }
 
-const sampleData: IndefiniteModelData = {
-  typeName: 'tests',
-  attributes: {
+const sampleData = {
+  // typeName: 'tests',
+  // attributes: {
     name: 'potato',
     extended: {
       actual: 'rutabaga',
       otherValue: 42,
     },
-  },
-  relationships: {},
+  // },
+  // relationships: {},
 };
 
 describe('Plump Rest Integration', () => {
@@ -115,7 +115,7 @@ describe('Plump Rest Integration', () => {
   });
 
   const rest = new RestStore({
-    baseUrl: `http://localhost:${TEST_PORT}/api`,
+    baseURL: `http://localhost:${TEST_PORT}/api`,
     terminal: true,
   });
   const frontendPlump = new Plump();
@@ -158,7 +158,11 @@ describe('Plump Rest Integration', () => {
     it('C', () => {
       const one = new TestType(sampleData, frontendPlump);
       return one.save()
-      .then(saved => expect(saved).to.have.property('id', saved.id));
+      .then(saved => expect(saved).to.have.property('id', saved.id))
+      .catch(err => {
+        console.log(err);
+        throw err;
+      });
     });
 
     it('R', () => {
@@ -166,20 +170,12 @@ describe('Plump Rest Integration', () => {
       return one.save()
       .then(saved => {
         return backendPlump.find(TestType.typeName, one.id).get()
-        .then(v => expect(v.attributes.name).to.equal(sampleData.attributes.name))
+        .then(v => expect(v.attributes.name).to.equal(sampleData.name))
         .then((v) => frontendPlump.find(TestType.typeName, one.id).get())
-        .then((v) => expect(v).to.deep.equal(
-          mergeOptions(
-            {},
-            sampleData,
-            {
-              id: saved.id,
-              attributes: {
-                id: saved.id,
-              },
-            }
-          )
-        ));
+        .then((v) => {
+          expect(v.attributes.name).to.equal('potato');
+          expect(v).to.have.property('id');
+        });
       });
     });
 
@@ -188,7 +184,7 @@ describe('Plump Rest Integration', () => {
       return one.save()
       .then(() => frontendPlump.find(TestType.typeName, one.id).set({ name: 'frotato' }).save())
       .then(() => frontendPlump.find(TestType, one.id).get())
-      .then((v) => expect(v).to.eventually.have.deep.property('attributes.name', 'frotato'));
+      .then((v) => expect(v).to.have.deep.property('attributes.name', 'frotato'));
     });
 
     it('D', () => {
@@ -196,9 +192,9 @@ describe('Plump Rest Integration', () => {
       return one.save()
       .then((saved) => {
         return backendPlump.find(TestType.typeName, one.id).get()
-        .then(v => expect(v.attributes.name).to.equal(sampleData.attributes.name))
+        .then(v => expect(v.attributes.name).to.equal(sampleData.name))
         .then(() => frontendPlump.find(TestType, one.id).get())
-        .then((v) => expect(v).to.eventually.have.deep.property('attributes.name', 'potato'));
+        .then((v) => expect(v).to.have.deep.property('attributes.name', 'potato'));
       })
       .then(() => one.delete())
       .then(() => expect(frontendPlump.find(TestType, one.id).get()).to.eventually.be.null);
@@ -221,7 +217,7 @@ describe('Plump Rest Integration', () => {
       .then(() => one.add('children', { id: 101 }).save())
       .then(() => frontendPlump.find(TestType, one.id).get(['attributes', 'relationships']))
       .then((v) => {
-        expect(v.attributes.name).to.equal(sampleData.attributes.name);
+        expect(v.attributes.name).to.equal(sampleData.name);
         expect(v.relationships.children).to.deep.equal([{ id: 101 }]);
       });
     });
@@ -232,7 +228,7 @@ describe('Plump Rest Integration', () => {
       .then(() => one.add('valenceChildren', { id: 102, meta: { perm: 2 } }).save())
       .then(() => frontendPlump.find(TestType, one.id).get('relationships.valenceChildren'))
       .then((v) => expect(v.relationships.valenceChildren).to.deep.equal([{ id: 102, meta: { perm: 2 } }]))
-      .then(() => frontendPlump.find(TestType, one.id).modifyRelationship('valenceChildren', { id: 102, meta: { perm: 3 } }))
+      .then(() => frontendPlump.find(TestType, one.id).modifyRelationship('valenceChildren', { id: 102, meta: { perm: 3 } }).save())
       .then(() => frontendPlump.find(TestType, one.id).get('relationships.valenceChildren'))
       .then((v) => expect(v.relationships.valenceChildren).to.deep.equal([{ id: 102, meta: { perm: 3 } }]));
     });

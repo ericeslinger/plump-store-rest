@@ -1,5 +1,5 @@
-import { MemoryStore, PackagedModelData } from 'plump';
-import Axios, { AxiosResponse } from 'axios';
+import { MemoryStore, ModelData } from 'plump';
+import Axios, { AxiosResponse, AxiosInstance } from 'axios';
 import { TestType } from './testType';
 
 
@@ -39,7 +39,7 @@ function axiosAdapter(config): Promise<AxiosResponse> {
       return handleDelete(request);
     }
     return Promise.reject({ response: { status: 400 } });
-  }).then((data: PackagedModelData) => {
+  }).then((data: ModelData | ModelData) => {
     if (data) {
       const retVal: AxiosResponse = {
          data: data,
@@ -50,12 +50,12 @@ function axiosAdapter(config): Promise<AxiosResponse> {
       };
       return retVal;
     } else {
-      return Promise.reject({ response: { status: 404 } });
+      return { status: 404, statusText: 'Not found.' };
     }
   });
 }
 
-function handleGet(request): Promise<PackagedModelData> {
+function handleGet(request): Promise<ModelData> {
   return Promise.resolve()
   .then(() => {
     if (request.relationship) {
@@ -63,78 +63,52 @@ function handleGet(request): Promise<PackagedModelData> {
     } else {
       return backingStore.read( { typeName: TestType.typeName, id: request.id }, ['attributes', 'relationships'] );
     }
-  }).then(v => {
-    return {
-      data: v,
-    };
+  // }).then(v => {
+  //   return {
+  //     data: v,
+  //   };
   });
 }
 
-function handlePost(request, data): Promise<PackagedModelData> {
-  return backingStore.writeAttributes(data).then(v => {
-    return {
-      data: v,
-    };
-  });
+function handlePost(request, data): Promise<ModelData> {
+  return backingStore.writeAttributes(data);
 }
 
-function handlePatchAttributes(request, data): Promise<PackagedModelData> {
+function handlePatchAttributes(request, data): Promise<ModelData> {
   return backingStore.writeAttributes(
     Object.assign({}, data, { id: request.id, type: TestType.typeName })
-  ).then(v => {
-    return {
-      data: v,
-    };
-  });
+  );
 }
 
-function handlePatchRelationship(request, data): Promise<PackagedModelData> {
+function handlePatchRelationship(request, data): Promise<ModelData> {
   return backingStore.writeRelationshipItem(
     { typeName: TestType.typeName, id: request.id },
     request.relationship,
     { id: request.childId, meta: data },
-  ).then(v => {
-    return {
-      data: v,
-    };
-  });
+  );
 }
 
-function handlePut(request, data): Promise<PackagedModelData> {
+function handlePut(request, data): Promise<ModelData> {
   return backingStore.writeRelationshipItem(
     { typeName: TestType.typeName, id: request.id },
     request.relationship,
     data,
-  ).then(v => {
-    return {
-      data: v,
-    };
-  });
+  );
 }
 
-function handleDelete(request): Promise<PackagedModelData> {
+function handleDelete(request): Promise<ModelData | void> {
   if (!request.relationship) {
-    return backingStore.delete({ typeName: TestType.typeName, id: request.id })
-    .then(v => {
-      return {
-        data: null,
-      };
-    });
+    return backingStore.delete({ typeName: TestType.typeName, id: request.id });
   } else {
     return backingStore.deleteRelationshipItem(
       { typeName: TestType.typeName, id: request.id },
       request.relationship,
       { id: request.childId }
-    )
-    .then(v => {
-      return {
-        data: v,
-      };
-    });
+    );
   }
 }
 
-export const mockedAxios = Axios.create({
+export const mockedAxios: AxiosInstance = Axios.create({
   baseURL: '',
   adapter: axiosAdapter,
 });
