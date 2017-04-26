@@ -1,6 +1,6 @@
 {
   "name": "plump-store-rest",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "REST endpoint storage for Plump",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,38 +24,36 @@
   },
   "homepage": "https://github.com/kstf/plump-store-rest#readme",
   "devDependencies": {
-    "@types/bluebird": "^3.5.2",
-    "@types/chai": "^3.4.35",
+    "@types/chai": "^3.5.1",
     "@types/chai-as-promised": "0.0.30",
     "@types/core-js": "^0.9.41",
-    "@types/hapi": "^16.0.0",
-    "@types/joi": "^10.0.1",
-    "@types/mocha": "^2.2.40",
-    "@types/node": "^7.0.12",
+    "@types/hapi": "^16.0.3",
+    "@types/joi": "^10.3.0",
+    "@types/mocha": "^2.2.41",
+    "@types/node": "^7.0.14",
     "boom": "^4.3.1",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "del": "^2.2.2",
     "gulp": "gulpjs/gulp.git#4.0",
-    "gulp-sourcemaps": "^2.5.1",
+    "gulp-sourcemaps": "^2.6.0",
     "gulp-typescript": "^3.1.6",
     "hapi": "^16.1.1",
     "joi": "^10.4.1",
-    "mocha": "^3.2.0",
+    "mocha": "^3.3.0",
     "pg": "^6.1.5",
-    "plump-store-postgres": "^0.12.0",
-    "plump-strut": "^0.12.0",
+    "plump-store-postgres": "^0.13.0",
+    "plump-strut": "^0.13.0",
     "ts-node": "^3.0.2",
     "tslint": "^5.1.0",
     "tslint-eslint-rules": "^4.0.0",
     "typescript": "^2.2.2"
   },
   "peerDependencies": {
-    "plump": "^0.12.0"
+    "plump": "^0.13.0"
   },
   "dependencies": {
-    "axios": "^0.16.0",
-    "bluebird": "^3.5.0",
+    "axios": "^0.16.1",
     "merge-options": "0.0.64",
     "rxjs": "^5.3.0"
   }
