@@ -20,9 +20,9 @@ export class RestStore extends Storage implements TerminalStore {
     return Promise.resolve()
     .then(() => {
       if (value.id) {
-        return this.axios.patch(`/${value.typeName}/${value.id}`, value);
+        return this.axios.patch(`/${value.type}/${value.id}`, value);
       } else if (this.terminal) {
-        return this.axios.post(`/${value.typeName}`, value);
+        return this.axios.post(`/${value.type}`, value);
       } else {
         throw new Error('Cannot create new content in a non-terminal store');
       }
@@ -30,7 +30,7 @@ export class RestStore extends Storage implements TerminalStore {
     .then((response) => {
       const result = response.data;
       this.fireWriteUpdate({
-        typeName: result.typeName,
+        type: result.type,
         id: result.id,
         invalidate: ['attributes'],
       });
@@ -40,7 +40,7 @@ export class RestStore extends Storage implements TerminalStore {
 
   readAttributes(item: ModelReference): Promise<ModelData> {
     return Promise.resolve()
-    .then(() => this.axios.get(`/${item.typeName}/${item.id}`))
+    .then(() => this.axios.get(`/${item.type}/${item.id}`))
     .then((reply) => {
       if (reply.status === 404) {
         return null;
@@ -55,7 +55,12 @@ export class RestStore extends Storage implements TerminalStore {
         }
         return result;
       }
-    }).catch((err) => {
+    })
+    // .then((v) => {
+    //   console.log(v);
+    //   return v;
+    // })
+    .catch((err) => {
       console.log('promise rejection in rest');
       if (err.response && err.response.status === 404) {
         return null;
@@ -66,7 +71,7 @@ export class RestStore extends Storage implements TerminalStore {
   }
 
   readRelationship(value: ModelReference, relName: string): Promise<ModelData> {
-    return this.axios.get(`/${value.typeName}/${value.id}/${relName}`)
+    return this.axios.get(`/${value.type}/${value.id}/${relName}`)
     .then((response) => {
       if (response.data.included) {
         response.data.included.forEach((item) => {
@@ -85,26 +90,26 @@ export class RestStore extends Storage implements TerminalStore {
   }
 
   writeRelationshipItem( value: ModelReference, relName: string, child: {id: string | number} ): Promise<ModelData> {
-    return this.axios.put(`/${value.typeName}/${value.id}/${relName}`, child)
+    return this.axios.put(`/${value.type}/${value.id}/${relName}`, child)
     .then((res) => {
-      this.fireWriteUpdate({ typeName: value.typeName, id: value.id, invalidate: [`relationships.${relName}`] });
+      this.fireWriteUpdate({ type: value.type, id: value.id, invalidate: [`relationships.${relName}`] });
       return res.data;
     });
   }
 
   deleteRelationshipItem( value: ModelReference, relName: string, child: {id: string | number} ): Promise<ModelData> {
-    return this.axios.delete(`/${value.typeName}/${value.id}/${relName}/${child.id}`)
+    return this.axios.delete(`/${value.type}/${value.id}/${relName}/${child.id}`)
     .then((res) => {
-      this.fireWriteUpdate({ typeName: value.typeName, id: value.id, invalidate: [`relationships.${relName}`] });
+      this.fireWriteUpdate({ type: value.type, id: value.id, invalidate: [`relationships.${relName}`] });
       return res.data;
     });
   }
 
   delete(value: ModelReference): Promise<void> {
-    return this.axios.delete(`/${value.typeName}/${value.id}`)
+    return this.axios.delete(`/${value.type}/${value.id}`)
     .then((response) => {
       this.fireWriteUpdate({
-        typeName: value.typeName,
+        type: value.type,
         id: value.id,
         invalidate: ['attributes'],
       });

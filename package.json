@@ -24,37 +24,33 @@
   },
   "homepage": "https://github.com/kstf/plump-store-rest#readme",
   "devDependencies": {
-    "@types/chai": "^3.5.1",
-    "@types/chai-as-promised": "0.0.30",
+    "@types/chai": "^3.5.2",
     "@types/core-js": "^0.9.41",
-    "@types/hapi": "^16.0.3",
-    "@types/joi": "^10.3.0",
+    "@types/hapi": "^16.1.2",
+    "@types/joi": "^10.3.2",
     "@types/mocha": "^2.2.41",
-    "@types/node": "^7.0.14",
-    "boom": "^4.3.1",
-    "chai": "^3.5.0",
-    "chai-as-promised": "^6.0.0",
+    "@types/node": "^7.0.22",
+    "boom": "^5.1.0",
+    "chai": "^4.0.0",
     "del": "^2.2.2",
     "gulp": "gulpjs/gulp.git#4.0",
     "gulp-sourcemaps": "^2.6.0",
-    "gulp-typescript": "^3.1.6",
-    "hapi": "^16.1.1",
-    "joi": "^10.4.1",
-    "mocha": "^3.3.0",
-    "pg": "^6.1.5",
-    "plump-store-postgres": "^0.13.0",
-    "plump-strut": "^0.13.0",
-    "ts-node": "^3.0.2",
-    "tslint": "^5.1.0",
-    "tslint-eslint-rules": "^4.0.0",
-    "typescript": "^2.2.2"
-  },
-  "peerDependencies": {
-    "plump": "^0.13.0"
+    "gulp-typescript": "^3.1.7",
+    "hapi": "^16.3.0",
+    "joi": "^10.5.2",
+    "mocha": "^3.4.2",
+    "pg": "^6.2.3",
+    "plump-store-postgres": "github:ericeslinger/plump-store-postgres",
+    "plump-strut": "github:ericeslinger/plump-strut",
+    "ts-node": "^3.0.4",
+    "tslint": "^5.3.2",
+    "tslint-eslint-rules": "^4.1.1",
+    "typescript": "^2.3.4"
   },
   "dependencies": {
+    "plump": "github:ericeslinger/plump",
     "axios": "^0.16.1",
-    "merge-options": "0.0.64",
-    "rxjs": "^5.3.0"
+    "merge-options": "1.0.0",
+    "rxjs": "^5.4.0"
   }
 }
