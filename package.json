@@ -1,6 +1,6 @@
 {
   "name": "plump-store-rest",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "REST endpoint storage for Plump",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -40,15 +40,15 @@
     "joi": "^10.5.2",
     "mocha": "^3.4.2",
     "pg": "^6.2.3",
-    "plump-store-postgres": "github:ericeslinger/plump-store-postgres",
-    "plump-strut": "github:ericeslinger/plump-strut",
+    "plump-store-postgres": "^0.14.0",
+    "plump-strut": "^0.14.0",
     "ts-node": "^3.0.4",
     "tslint": "^5.3.2",
     "tslint-eslint-rules": "^4.1.1",
     "typescript": "^2.3.4"
   },
   "dependencies": {
-    "plump": "github:ericeslinger/plump",
+    "plump": "^0.14.0",
     "axios": "^0.16.1",
     "merge-options": "1.0.0",
     "rxjs": "^5.4.0"
