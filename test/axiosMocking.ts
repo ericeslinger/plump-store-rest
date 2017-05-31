@@ -11,10 +11,10 @@ export function init() {
 function axiosAdapter(config): Promise<AxiosResponse> {
   return Promise.resolve().then(() => {
     const method = config.method;
-    const matchBase = config.url.match(new RegExp(`^/${TestType.typeName}$`));
-    const matchItem = config.url.match(new RegExp(`^/${TestType.typeName}/(\\d+)$`));
-    const matchSideBase = config.url.match(new RegExp(`^/${TestType.typeName}/(\\d+)/(\\w+)$`));
-    const matchSideItem = config.url.match(new RegExp(`^/${TestType.typeName}/(\\d+)/(\\w+)/(\\d+)$`));
+    const matchBase = config.url.match(new RegExp(`^/${TestType.type}$`));
+    const matchItem = config.url.match(new RegExp(`^/${TestType.type}/(\\d+)$`));
+    const matchSideBase = config.url.match(new RegExp(`^/${TestType.type}/(\\d+)/(\\w+)$`));
+    const matchSideItem = config.url.match(new RegExp(`^/${TestType.type}/(\\d+)/(\\w+)/(\\d+)$`));
     const match = matchSideItem || matchSideBase || matchItem || matchBase || [];
 
     const request = {
@@ -59,9 +59,9 @@ function handleGet(request): Promise<ModelData> {
   return Promise.resolve()
   .then(() => {
     if (request.relationship) {
-      return backingStore.readRelationship({ typeName: TestType.typeName, id: request.id }, request.relationship);
+      return backingStore.readRelationship({ type: TestType.type, id: request.id }, request.relationship);
     } else {
-      return backingStore.read( { typeName: TestType.typeName, id: request.id }, ['attributes', 'relationships'] );
+      return backingStore.read( { type: TestType.type, id: request.id }, ['attributes', 'relationships'] );
     }
   // }).then(v => {
   //   return {
@@ -76,13 +76,13 @@ function handlePost(request, data): Promise<ModelData> {
 
 function handlePatchAttributes(request, data): Promise<ModelData> {
   return backingStore.writeAttributes(
-    Object.assign({}, data, { id: request.id, type: TestType.typeName })
+    Object.assign({}, data, { id: request.id, type: TestType.type })
   );
 }
 
 function handlePatchRelationship(request, data): Promise<ModelData> {
   return backingStore.writeRelationshipItem(
-    { typeName: TestType.typeName, id: request.id },
+    { type: TestType.type, id: request.id },
     request.relationship,
     { id: request.childId, meta: data },
   );
@@ -90,7 +90,7 @@ function handlePatchRelationship(request, data): Promise<ModelData> {
 
 function handlePut(request, data): Promise<ModelData> {
   return backingStore.writeRelationshipItem(
-    { typeName: TestType.typeName, id: request.id },
+    { type: TestType.type, id: request.id },
     request.relationship,
     data,
   );
@@ -98,10 +98,10 @@ function handlePut(request, data): Promise<ModelData> {
 
 function handleDelete(request): Promise<ModelData | void> {
   if (!request.relationship) {
-    return backingStore.delete({ typeName: TestType.typeName, id: request.id });
+    return backingStore.delete({ type: TestType.type, id: request.id });
   } else {
     return backingStore.deleteRelationshipItem(
-      { typeName: TestType.typeName, id: request.id },
+      { type: TestType.type, id: request.id },
       request.relationship,
       { id: request.childId }
     );
