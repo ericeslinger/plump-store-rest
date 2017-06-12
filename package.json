@@ -30,6 +30,7 @@
     "@types/joi": "^10.3.2",
     "@types/mocha": "^2.2.41",
     "@types/node": "^7.0.22",
+    "@types/socket.io-client": "^1.4.29",
     "boom": "^5.1.0",
     "chai": "^4.0.0",
     "del": "^2.2.2",
@@ -41,16 +42,17 @@
     "mocha": "^3.4.2",
     "pg": "^6.2.3",
     "plump-store-postgres": "^0.14.0",
-    "plump-strut": "^0.14.0",
+    "plump-strut": "^0.15.0",
     "ts-node": "^3.0.4",
     "tslint": "^5.3.2",
     "tslint-eslint-rules": "^4.1.1",
+    "plump": "^0.15.1",
     "typescript": "^2.3.4"
   },
   "dependencies": {
-    "plump": "^0.14.0",
     "axios": "^0.16.1",
     "merge-options": "1.0.0",
-    "rxjs": "^5.4.0"
+    "rxjs": "^5.4.0",
+    "socket.io-client": "^2.0.2"
   }
 }

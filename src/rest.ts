@@ -1,11 +1,24 @@
 import Axios, { AxiosInstance } from 'axios';
+import * as SocketIO from 'socket.io-client';
+import { testAuthentication } from './socket/authentication.channel';
+
+
 import { Storage, StorageOptions, IndefiniteModelData, ModelData, ModelReference, TerminalStore } from 'plump';
 
+export interface RestOptions extends StorageOptions {
+  baseURL?: string;
+  axios?: AxiosInstance;
+  socketURL?: string;
+  apiKey?: string;
+}
+
 export class RestStore extends Storage implements TerminalStore {
-  private axios;
-  constructor(opts: StorageOptions & { baseURL?: string, axios?: AxiosInstance }) {
+  public axios: AxiosInstance;
+  public io: SocketIOClient.Socket;
+  private options: RestOptions;
+  constructor(opts: RestOptions) {
     super(opts);
-    const options = Object.assign(
+    this.options = Object.assign(
       {},
       {
         baseURL: 'http://localhost/api',
@@ -13,7 +26,20 @@ export class RestStore extends Storage implements TerminalStore {
       opts
     );
 
-    this.axios = options.axios || Axios.create(options);
+    this.axios = this.options.axios || Axios.create(this.options);
+    if (this.options.socketURL) {
+      this.io = SocketIO(this.options.socketURL);
+    }
+  }
+
+  initialize() {
+    return testAuthentication(this.io, this.options.apiKey)
+    .then((v) => {
+      console.log(`AUTHENTICATION TOKEN TESTED: ${v}`);
+    })
+    .catch((err) => {
+      console.log('autherr', err);
+    });
   }
 
   writeAttributes(value: IndefiniteModelData): Promise<ModelData> {
@@ -56,12 +82,7 @@ export class RestStore extends Storage implements TerminalStore {
         return result;
       }
     })
-    // .then((v) => {
-    //   console.log(v);
-    //   return v;
-    // })
     .catch((err) => {
-      console.log('promise rejection in rest');
       if (err.response && err.response.status === 404) {
         return null;
       } else {
@@ -113,7 +134,7 @@ export class RestStore extends Storage implements TerminalStore {
         id: value.id,
         invalidate: ['attributes'],
       });
-      return response.datas;
+      return response.data;
     });
   }
 
