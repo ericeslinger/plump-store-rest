@@ -5,13 +5,13 @@ import * as pg from 'pg';
 import * as chai from 'chai';
 import * as SocketIO from 'socket.io-client';
 
-import { Plump } from 'plump';
+import { Plump, KeyService, Oracle } from 'plump';
 import { PGStore } from 'plump-store-postgres';
 import { TestType } from './testType';
 import { RestStore } from '../src/rest';
 import { StrutServer } from 'plump-strut';
 import { rpc } from '../src/socket/socket';
-import { ListResponse } from '../src/socket/messageInterfaces';
+import { ListResponse, TestResponse } from '../src/socket/messageInterfaces';
 
 
 import 'mocha';
@@ -93,6 +93,27 @@ const sampleData = {
 
 describe('Plump Rest Integration', () => {
 
+  const ks: KeyService = {
+    test: (v: string) => Promise.resolve(v === 'good'),
+    get: (v: string) => {
+      if (v === 'good') {
+        return Promise.resolve({
+          type: 'user',
+          id: 1,
+          attributes: {},
+          relationships: {}
+        });
+      } else {
+        return Promise.resolve(null);
+      }
+    },
+    set: (k, v) => {
+      return Promise.resolve();
+    }
+  };
+
+  const oracle = new Oracle(ks);
+
   const context = {
     rest: new RestStore({
       baseURL: `http://localhost:${TEST_PORT}/api`,
@@ -124,7 +145,7 @@ describe('Plump Rest Integration', () => {
     .then(() => context.frontendPlump.setTerminal(context.rest))
     .then(() => context.frontendPlump.addType(TestType))
     .then(() => {
-      context.strut = new StrutServer(context.backendPlump, null, {
+      context.strut = new StrutServer(context.backendPlump, oracle, {
         apiProtocol: 'http',
         apiRoot: '/api',
         apiPort: TEST_PORT,
@@ -242,17 +263,22 @@ describe('Plump Rest Integration', () => {
         });
       });
     });
-    it('validates api keys');
+    it('validates api keys', () => {
+      const io = SocketIO(`http://localhost:${TEST_PORT}`);
+      return Promise.all([
+        rpc(io, 'auth', { request: 'testkey', key: 'good' }),
+        rpc(io, 'auth', { request: 'testkey', key: 'bad' })
+      ]).then((results: TestResponse[]) => {
+        expect(results[0].auth).to.equal(true);
+        expect(results[1].auth).to.equal(false);
+      });
+    });
     it('lists authentication modes', () => {
-      return new Promise((resolve) => {
-        const io = SocketIO(`http://localhost:${TEST_PORT}`);
-        return rpc(io, 'auth', { request: 'list' })
-        .then((resp: ListResponse) => {
-          console.log(JSON.stringify(resp, null, 2));
-          expect(resp.response).to.equal('list');
-          expect(resp.types).to.deep.equal([]);
-          resolve();
-        });
+      const io = SocketIO(`http://localhost:${TEST_PORT}`);
+      return rpc(io, 'auth', { request: 'list' })
+      .then((resp: ListResponse) => {
+        expect(resp.response).to.equal('list');
+        expect(resp.types).to.deep.equal([]);
       });
     });
   });
