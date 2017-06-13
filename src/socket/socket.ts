@@ -1,14 +1,23 @@
 import * as SocketIO from 'socket.io-client';
-import { ChannelMessage, Response } from './messageInterfaces';
+import { ChannelRequest, SingletonRequest, Response } from './messageInterfaces';
+import * as ulid from 'ulid';
 
-export function rpc<T extends Response, U extends ChannelMessage>(io: SocketIOClient.Socket, channel: string, request: U): Promise<T> {
+export function rpc<T extends Response, U extends ChannelRequest> (
+  io: SocketIOClient.Socket,
+  channel: string,
+  request: U
+): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    const handleError = (err) => reject(err);
-    io.once(channel, (response) => {
-      io.off('error', handleError);
+    const req: ChannelRequest & SingletonRequest = Object.assign(
+      {},
+      request,
+      {
+        responseKey: ulid(),
+      }
+    );
+    io.once(req.responseKey, (response) => {
       resolve(response);
     });
-    io.once('error', handleError);
-    io.emit(channel, request);
-  })
+    io.emit(channel, req);
+  });
 }

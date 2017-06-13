@@ -3,14 +3,16 @@
 import * as Hapi from 'hapi';
 import * as pg from 'pg';
 import * as chai from 'chai';
+import * as SocketIO from 'socket.io-client';
 
 import { Plump } from 'plump';
 import { PGStore } from 'plump-store-postgres';
 import { TestType } from './testType';
 import { RestStore } from '../src/rest';
 import { StrutServer } from 'plump-strut';
+import { rpc } from '../src/socket/socket';
+import { ListResponse } from '../src/socket/messageInterfaces';
 
-import * as SocketIO from 'socket.io-client';
 
 import 'mocha';
 
@@ -232,7 +234,7 @@ describe('Plump Rest Integration', () => {
   });
 
   describe('socket functions', () => {
-    it ('allows connection', () => {
+    it('allows connection', () => {
       return new Promise((done) => {
         const io = SocketIO(`http://localhost:${TEST_PORT}`);
         io.on('connect', () => {
@@ -240,14 +242,16 @@ describe('Plump Rest Integration', () => {
         });
       });
     });
-    it ('validates api keys', () => {
-      return new Promise((resolve, reject) => {
+    it('validates api keys');
+    it('lists authentication modes', () => {
+      return new Promise((resolve) => {
         const io = SocketIO(`http://localhost:${TEST_PORT}`);
-        io.on('connect', () => {
-          io.once('list', (v) => {
-            expect(v.response).to.equal('list');
-            resolve();
-          });
+        return rpc(io, 'auth', { request: 'list' })
+        .then((resp: ListResponse) => {
+          console.log(JSON.stringify(resp, null, 2));
+          expect(resp.response).to.equal('list');
+          expect(resp.types).to.deep.equal([]);
+          resolve();
         });
       });
     });

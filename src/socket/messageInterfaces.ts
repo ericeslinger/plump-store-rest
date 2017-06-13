@@ -1,25 +1,29 @@
-export interface ChannelMessage {
+export interface SingletonRequest {
+  responseKey: string;
+}
+
+export interface ChannelRequest {
   request: string;
 }
 
-export interface ListAuthenticationChannelMessage extends ChannelMessage {
+export interface ListAuthenticationRequest extends ChannelRequest, SingletonRequest {
   request: 'list';
 }
 
-export interface TestKeyAuthenticationChannelMessage extends ChannelMessage {
+export interface TestKeyAuthenticationRequest extends ChannelRequest, SingletonRequest {
   request: 'testkey';
   key: string;
 }
 
-export interface StartAuthenticationChannelMessage extends ChannelMessage {
+export interface StartAuthenticationRequest extends ChannelRequest, SingletonRequest {
   request: 'startauth';
   nonce: string;
 }
 
-export type AuthenticationChannelMessage
-  = ListAuthenticationChannelMessage
-  | TestKeyAuthenticationChannelMessage
-  | StartAuthenticationChannelMessage;
+export type AuthenticationRequest
+  = ListAuthenticationRequest
+  | TestKeyAuthenticationRequest
+  | StartAuthenticationRequest;
 
 export interface Response {
   response: string;
@@ -39,7 +43,7 @@ export interface TestResponse extends Response {
   auth: boolean;
 }
 
-export type AuthenticationChannelResponse
+export type AuthenticationResponse
   = InvalidRequestResponse
   | ListResponse
   | TestResponse;

@@ -6,5 +6,5 @@ export function testAuthentication(io: SocketIOClient.Socket, key: string): Prom
   return rpc(io, 'authentication', { request: 'testkey', key: key })
   .then((v: TestResponse) => {
     return v.auth;
-  })
+  });
 }
