@@ -34,8 +34,14 @@ export interface InvalidRequestResponse extends Response {
 }
 
 export interface StartResponse extends Response {
-  response: 'list';
-  types: string[];
+  response: 'start';
+  types: AuthenticationType[];
+}
+
+export interface TokenResponse extends Response {
+  response: 'token';
+  token: string;
+  result: 'success' | 'failure';
 }
 
 export interface TestResponse extends Response {
@@ -46,4 +52,11 @@ export interface TestResponse extends Response {
 export type AuthenticationResponse =
   | InvalidRequestResponse
   | StartResponse
+  | TokenResponse
   | TestResponse;
+
+export interface AuthenticationType {
+  url: string;
+  iconUrl?: string;
+  name: string;
+}
