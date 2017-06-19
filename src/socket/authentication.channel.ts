@@ -1,27 +1,27 @@
-import * as SocketIO from 'socket.io-client';
+import * as SocketIOClient from 'socket.io-client';
 import { rpc } from './socket';
 import {
   TestResponse,
   StartResponse,
-  TokenResponse
+  TokenResponse,
 } from './messageInterfaces';
 import { Observable, Subject } from 'rxjs';
 import * as ulid from 'ulid';
 
 export function testAuthentication(
   io: SocketIOClient.Socket,
-  key: string
+  key: string,
 ): Promise<boolean> {
-  return rpc(io, 'authentication', {
+  return rpc(io, 'auth', {
     request: 'testkey',
-    key: key
+    key: key,
   }).then((v: TestResponse) => {
     return v.auth;
   });
 }
 
 export function authenticate(
-  io: SocketIOClient.Socket
+  io: SocketIOClient.Socket,
 ): Observable<TokenResponse | StartResponse> {
   const nonce = ulid();
   const subj = new Subject<TokenResponse | StartResponse>();
@@ -30,16 +30,16 @@ export function authenticate(
       subj.next({
         token: result.token,
         response: 'token',
-        result: 'success'
+        result: 'success',
       });
       subj.complete();
     } else {
       subj.error(result);
     }
   });
-  rpc(io, 'authentication', {
+  rpc(io, 'auth', {
     request: 'startauth',
-    nonce: nonce
+    nonce: nonce,
   }).then((r: StartResponse) => {
     subj.next(r);
   });

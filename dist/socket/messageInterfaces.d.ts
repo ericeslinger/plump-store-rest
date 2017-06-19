@@ -23,7 +23,7 @@ export interface InvalidRequestResponse extends Response {
     response: 'invalidRequest';
 }
 export interface StartResponse extends Response {
-    response: 'start';
+    response: 'startauth';
     types: AuthenticationType[];
 }
 export interface TokenResponse extends Response {

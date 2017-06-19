@@ -34,7 +34,7 @@ export interface InvalidRequestResponse extends Response {
 }
 
 export interface StartResponse extends Response {
-  response: 'start';
+  response: 'startauth';
   types: AuthenticationType[];
 }
 
