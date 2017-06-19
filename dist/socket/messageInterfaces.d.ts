@@ -1,49 +1,33 @@
 export interface SingletonRequest {
-  responseKey: string;
+    responseKey: string;
 }
-
 export interface ChannelRequest {
-  request: string;
+    request: string;
 }
-
 export interface ListAuthenticationRequest extends ChannelRequest, SingletonRequest {
-  request: 'list';
+    request: 'list';
 }
-
 export interface TestKeyAuthenticationRequest extends ChannelRequest, SingletonRequest {
-  request: 'testkey';
-  key: string;
+    request: 'testkey';
+    key: string;
 }
-
 export interface StartAuthenticationRequest extends ChannelRequest, SingletonRequest {
-  request: 'startauth';
-  nonce: string;
+    request: 'startauth';
+    nonce: string;
 }
-
-export type AuthenticationRequest =
-  | ListAuthenticationRequest
-  | TestKeyAuthenticationRequest
-  | StartAuthenticationRequest;
-
+export declare type AuthenticationRequest = ListAuthenticationRequest | TestKeyAuthenticationRequest | StartAuthenticationRequest;
 export interface Response {
-  response: string;
+    response: string;
 }
-
 export interface InvalidRequestResponse extends Response {
-  response: 'invalidRequest';
+    response: 'invalidRequest';
 }
-
 export interface StartResponse extends Response {
-  response: 'list';
-  types: string[];
+    response: 'list';
+    types: string[];
 }
-
 export interface TestResponse extends Response {
-  response: 'testkey';
-  auth: boolean;
+    response: 'testkey';
+    auth: boolean;
 }
-
-export type AuthenticationResponse =
-  | InvalidRequestResponse
-  | StartResponse
-  | TestResponse;
+export declare type AuthenticationResponse = InvalidRequestResponse | StartResponse | TestResponse;
