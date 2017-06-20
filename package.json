@@ -30,7 +30,6 @@
     "@types/joi": "^10.3.2",
     "@types/mocha": "^2.2.41",
     "@types/node": "^7.0.22",
-    "@types/socket.io-client": "^1.4.29",
     "boom": "^5.1.0",
     "chai": "^4.0.0",
     "del": "^2.2.2",
@@ -50,6 +49,7 @@
     "typescript": "^2.3.4"
   },
   "dependencies": {
+    "@types/socket.io-client": "^1.4.29",
     "axios": "^0.16.1",
     "merge-options": "1.0.0",
     "rxjs": "^5.4.0",
