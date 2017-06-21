@@ -1,11 +1,17 @@
 import { AxiosInstance } from 'axios';
 import { Storage, StorageOptions, IndefiniteModelData, ModelData, ModelReference, TerminalStore } from 'plump';
+export interface RestOptions extends StorageOptions {
+    baseURL?: string;
+    axios?: AxiosInstance;
+    socketURL?: string;
+    apiKey?: string;
+}
 export declare class RestStore extends Storage implements TerminalStore {
-    private axios;
-    constructor(opts: StorageOptions & {
-        baseURL?: string;
-        axios?: AxiosInstance;
-    });
+    axios: AxiosInstance;
+    io: SocketIOClient.Socket;
+    private options;
+    constructor(opts: RestOptions);
+    initialize(): Promise<void>;
     writeAttributes(value: IndefiniteModelData): Promise<ModelData>;
     readAttributes(item: ModelReference): Promise<ModelData>;
     readRelationship(value: ModelReference, relName: string): Promise<ModelData>;
@@ -16,5 +22,5 @@ export declare class RestStore extends Storage implements TerminalStore {
         id: string | number;
     }): Promise<ModelData>;
     delete(value: ModelReference): Promise<void>;
-    query(q: any): any;
+    query(q: any): Promise<any>;
 }

@@ -1,125 +1,170 @@
 import Axios, { AxiosInstance } from 'axios';
-import { Storage, StorageOptions, IndefiniteModelData, ModelData, ModelReference, TerminalStore } from 'plump';
+import * as SocketIO from 'socket.io-client';
+import { testAuthentication } from './socket/authentication.channel';
+
+import {
+  Storage,
+  StorageOptions,
+  IndefiniteModelData,
+  ModelData,
+  ModelReference,
+  TerminalStore,
+} from 'plump';
+
+export interface RestOptions extends StorageOptions {
+  baseURL?: string;
+  axios?: AxiosInstance;
+  socketURL?: string;
+  apiKey?: string;
+}
 
 export class RestStore extends Storage implements TerminalStore {
-  private axios;
-  constructor(opts: StorageOptions & { baseURL?: string, axios?: AxiosInstance }) {
+  public axios: AxiosInstance;
+  public io: SocketIOClient.Socket;
+  private options: RestOptions;
+  constructor(opts: RestOptions) {
     super(opts);
-    const options = Object.assign(
+    this.options = Object.assign(
       {},
       {
         baseURL: 'http://localhost/api',
       },
-      opts
+      opts,
     );
 
-    this.axios = options.axios || Axios.create(options);
+    this.axios = this.options.axios || Axios.create(this.options);
+    if (this.options.socketURL) {
+      this.io = SocketIO(this.options.socketURL);
+      this.io.on('connect', () => console.log('connected to socket'));
+    }
+  }
+
+  initialize() {
+    return testAuthentication(this.io, this.options.apiKey)
+      .then(v => {
+        console.log(`AUTHENTICATION TOKEN TESTED: ${v}`);
+      })
+      .catch(err => {
+        console.log('autherr', err);
+      });
   }
 
   writeAttributes(value: IndefiniteModelData): Promise<ModelData> {
     return Promise.resolve()
-    .then(() => {
-      if (value.id) {
-        return this.axios.patch(`/${value.type}/${value.id}`, value);
-      } else if (this.terminal) {
-        return this.axios.post(`/${value.type}`, value);
-      } else {
-        throw new Error('Cannot create new content in a non-terminal store');
-      }
-    })
-    .then((response) => {
-      const result = response.data;
-      this.fireWriteUpdate({
-        type: result.type,
-        id: result.id,
-        invalidate: ['attributes'],
+      .then(() => {
+        if (value.id) {
+          return this.axios.patch(`/${value.type}/${value.id}`, value);
+        } else if (this.terminal) {
+          return this.axios.post(`/${value.type}`, value);
+        } else {
+          throw new Error('Cannot create new content in a non-terminal store');
+        }
+      })
+      .then(response => {
+        const result = response.data;
+        this.fireWriteUpdate({
+          type: result.type,
+          id: result.id,
+          invalidate: ['attributes'],
+        });
+        return result;
       });
-      return result;
-    });
   }
 
   readAttributes(item: ModelReference): Promise<ModelData> {
     return Promise.resolve()
-    .then(() => this.axios.get(`/${item.type}/${item.id}`))
-    .then((reply) => {
-      if (reply.status === 404) {
-        return null;
-      } else if (reply.status !== 200) {
-        throw new Error(reply.statusText);
-      } else {
-        const result = reply.data;
-        if (result.included) {
-          result.included.forEach((includedData) => {
-            this.fireReadUpdate(includedData);
-          });
+      .then(() => this.axios.get(`/${item.type}/${item.id}`))
+      .then(reply => {
+        if (reply.status === 404) {
+          return null;
+        } else if (reply.status !== 200) {
+          throw new Error(reply.statusText);
+        } else {
+          const result = reply.data;
+          if (result.included) {
+            result.included.forEach(includedData => {
+              this.fireReadUpdate(includedData);
+            });
+          }
+          return result;
         }
-        return result;
-      }
-    })
-    // .then((v) => {
-    //   console.log(v);
-    //   return v;
-    // })
-    .catch((err) => {
-      console.log('promise rejection in rest');
-      if (err.response && err.response.status === 404) {
-        return null;
-      } else {
-        throw err;
-      }
-    });
+      })
+      .catch(err => {
+        if (err.response && err.response.status === 404) {
+          return null;
+        } else {
+          throw err;
+        }
+      });
   }
 
   readRelationship(value: ModelReference, relName: string): Promise<ModelData> {
-    return this.axios.get(`/${value.type}/${value.id}/${relName}`)
-    .then((response) => {
-      if (response.data.included) {
-        response.data.included.forEach((item) => {
-          this.fireReadUpdate(item);
+    return this.axios
+      .get(`/${value.type}/${value.id}/${relName}`)
+      .then(response => {
+        if (response.data.included) {
+          response.data.included.forEach(item => {
+            this.fireReadUpdate(item);
+          });
+        }
+        return response.data;
+      })
+      .catch(err => {
+        if (err.response && err.response.status === 404) {
+          return [];
+        } else {
+          throw err;
+        }
+      });
+  }
+
+  writeRelationshipItem(
+    value: ModelReference,
+    relName: string,
+    child: { id: string | number },
+  ): Promise<ModelData> {
+    return this.axios
+      .put(`/${value.type}/${value.id}/${relName}`, child)
+      .then(res => {
+        this.fireWriteUpdate({
+          type: value.type,
+          id: value.id,
+          invalidate: [`relationships.${relName}`],
         });
-      }
-      return response.data;
-    })
-    .catch((err) => {
-      if (err.response && err.response.status === 404) {
-        return [];
-      } else {
-        throw err;
-      }
-    });
+        return res.data;
+      });
   }
 
-  writeRelationshipItem( value: ModelReference, relName: string, child: {id: string | number} ): Promise<ModelData> {
-    return this.axios.put(`/${value.type}/${value.id}/${relName}`, child)
-    .then((res) => {
-      this.fireWriteUpdate({ type: value.type, id: value.id, invalidate: [`relationships.${relName}`] });
-      return res.data;
-    });
-  }
-
-  deleteRelationshipItem( value: ModelReference, relName: string, child: {id: string | number} ): Promise<ModelData> {
-    return this.axios.delete(`/${value.type}/${value.id}/${relName}/${child.id}`)
-    .then((res) => {
-      this.fireWriteUpdate({ type: value.type, id: value.id, invalidate: [`relationships.${relName}`] });
-      return res.data;
-    });
+  deleteRelationshipItem(
+    value: ModelReference,
+    relName: string,
+    child: { id: string | number },
+  ): Promise<ModelData> {
+    return this.axios
+      .delete(`/${value.type}/${value.id}/${relName}/${child.id}`)
+      .then(res => {
+        this.fireWriteUpdate({
+          type: value.type,
+          id: value.id,
+          invalidate: [`relationships.${relName}`],
+        });
+        return res.data;
+      });
   }
 
   delete(value: ModelReference): Promise<void> {
-    return this.axios.delete(`/${value.type}/${value.id}`)
-    .then((response) => {
+    return this.axios.delete(`/${value.type}/${value.id}`).then(response => {
       this.fireWriteUpdate({
         type: value.type,
         id: value.id,
         invalidate: ['attributes'],
       });
-      return response.datas;
+      return response.data;
     });
   }
 
   query(q) {
-    return this.axios.get(`/${q.type}`, { params: q.query })
-    .then((response) => {
+    return this.axios.get(`/${q.type}`, { params: q.query }).then(response => {
       return response.data;
     });
   }
