@@ -22,6 +22,7 @@ export class RestStore extends Storage implements TerminalStore {
   public axios: AxiosInstance;
   public io: SocketIOClient.Socket;
   private options: RestOptions;
+  private _dispatching: Promise<boolean>;
   constructor(opts: RestOptions) {
     super(opts);
     this.options = Object.assign(
@@ -39,15 +40,11 @@ export class RestStore extends Storage implements TerminalStore {
     }
   }
 
-  initialize() {
-    return testAuthentication(this.io, this.options.apiKey)
-      .then(v => {
-        console.log(`AUTHENTICATION TOKEN TESTED: ${v}`);
-      })
-      .catch(err => {
-        console.log('autherr', err);
-      });
-  }
+  // dispatching(): Promise<boolean> {
+  //   if (this._dispatching === undefined) {
+  //     this._dispatching =
+  //   }
+  // }
 
   writeAttributes(value: IndefiniteModelData): Promise<ModelData> {
     return Promise.resolve()
