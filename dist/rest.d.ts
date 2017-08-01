@@ -10,8 +10,8 @@ export declare class RestStore extends Storage implements TerminalStore {
     axios: AxiosInstance;
     io: SocketIOClient.Socket;
     private options;
+    private _dispatching;
     constructor(opts: RestOptions);
-    initialize(): Promise<void>;
     writeAttributes(value: IndefiniteModelData): Promise<ModelData>;
     readAttributes(item: ModelReference): Promise<ModelData>;
     readRelationship(value: ModelReference, relName: string): Promise<ModelData>;
