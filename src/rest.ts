@@ -162,6 +162,11 @@ export class RestStore extends Storage implements TerminalStore {
 
   query(q) {
     return this.axios.get(`/${q.type}`, { params: q.query }).then(response => {
+      if (response.data.included) {
+        response.data.included.forEach(item => {
+          this.fireReadUpdate(item);
+        });
+      }
       return response.data;
     });
   }
