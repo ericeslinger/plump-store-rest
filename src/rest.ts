@@ -161,7 +161,7 @@ export class RestStore extends Storage implements TerminalStore {
           this.fireReadUpdate(item);
         });
       }
-      return response.data;
+      return response.data.data;
     });
   }
 }

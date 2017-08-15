@@ -1,6 +1,6 @@
 {
   "name": "plump-store-rest",
-  "version": "0.17.3",
+  "version": "0.18.0",
   "description": "REST endpoint storage for Plump",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -40,7 +40,7 @@
     "ts-node": "^3.3.0",
     "tslint": "^5.5.0",
     "tslint-eslint-rules": "^4.1.1",
-    "plump": "^0.17.0",
+    "plump": "^0.18.0",
     "typescript": "^2.4.2"
   },
   "dependencies": {
