@@ -40,12 +40,6 @@ export class RestStore extends Storage implements TerminalStore {
     }
   }
 
-  // dispatching(): Promise<boolean> {
-  //   if (this._dispatching === undefined) {
-  //     this._dispatching =
-  //   }
-  // }
-
   writeAttributes(value: IndefiniteModelData): Promise<ModelData> {
     return Promise.resolve()
       .then(() => {
@@ -160,8 +154,8 @@ export class RestStore extends Storage implements TerminalStore {
     });
   }
 
-  query(q) {
-    return this.axios.get(`/${q.type}`, { params: q.query }).then(response => {
+  query(type: string, q: any) {
+    return this.axios.get(`/${type}`, { params: q }).then(response => {
       if (response.data.included) {
         response.data.included.forEach(item => {
           this.fireReadUpdate(item);
