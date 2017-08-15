@@ -1,4 +1,5 @@
 import { StartResponse, TokenResponse } from './messageInterfaces';
+import { RestStore } from '../rest';
 import { Observable } from 'rxjs';
-export declare function testAuthentication(io: SocketIOClient.Socket, key: string): Promise<boolean>;
-export declare function authenticate(io: SocketIOClient.Socket): Observable<TokenResponse | StartResponse>;
+export declare function testAuthentication(store: RestStore, key: string): Promise<boolean>;
+export declare function authenticate(store: RestStore): Observable<TokenResponse | StartResponse>;

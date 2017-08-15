@@ -1,6 +1,6 @@
 import Axios, { AxiosInstance } from 'axios';
 import * as SocketIO from 'socket.io-client';
-import { testAuthentication } from './socket/authentication.channel';
+// import { testAuthentication } from './socket/authentication.channel';
 
 import {
   Storage,

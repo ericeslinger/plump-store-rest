@@ -1,3 +1,5 @@
+import { ModelData } from 'plump';
+
 export interface SingletonRequest {
   responseKey: string;
 }
@@ -6,16 +8,22 @@ export interface ChannelRequest {
   request: string;
 }
 
-export interface ListAuthenticationRequest extends ChannelRequest, SingletonRequest {
+export interface ListAuthenticationRequest
+  extends ChannelRequest,
+    SingletonRequest {
   request: 'list';
 }
 
-export interface TestKeyAuthenticationRequest extends ChannelRequest, SingletonRequest {
+export interface TestKeyAuthenticationRequest
+  extends ChannelRequest,
+    SingletonRequest {
   request: 'testkey';
   key: string;
 }
 
-export interface StartAuthenticationRequest extends ChannelRequest, SingletonRequest {
+export interface StartAuthenticationRequest
+  extends ChannelRequest,
+    SingletonRequest {
   request: 'startauth';
   nonce: string;
 }
@@ -47,6 +55,7 @@ export interface TokenResponse extends Response {
 export interface TestResponse extends Response {
   response: 'testkey';
   auth: boolean;
+  included?: ModelData[];
 }
 
 export type AuthenticationResponse =
