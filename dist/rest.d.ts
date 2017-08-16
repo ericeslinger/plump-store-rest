@@ -22,5 +22,5 @@ export declare class RestStore extends Storage implements TerminalStore {
         id: string | number;
     }): Promise<ModelData>;
     delete(value: ModelReference): Promise<void>;
-    query(q: any): Promise<any>;
+    query(type: string, q: any): Promise<any>;
 }

@@ -1,6 +1,6 @@
 import Axios, { AxiosInstance } from 'axios';
 import * as SocketIO from 'socket.io-client';
-import { testAuthentication } from './socket/authentication.channel';
+// import { testAuthentication } from './socket/authentication.channel';
 
 import {
   Storage,
@@ -39,12 +39,6 @@ export class RestStore extends Storage implements TerminalStore {
       this.io.on('connect', () => console.log('connected to socket'));
     }
   }
-
-  // dispatching(): Promise<boolean> {
-  //   if (this._dispatching === undefined) {
-  //     this._dispatching =
-  //   }
-  // }
 
   writeAttributes(value: IndefiniteModelData): Promise<ModelData> {
     return Promise.resolve()
@@ -160,9 +154,14 @@ export class RestStore extends Storage implements TerminalStore {
     });
   }
 
-  query(q) {
-    return this.axios.get(`/${q.type}`, { params: q.query }).then(response => {
-      return response.data;
+  query(type: string, q: any) {
+    return this.axios.get(`/${type}`, { params: q }).then(response => {
+      if (response.data.included) {
+        response.data.included.forEach(item => {
+          this.fireReadUpdate(item);
+        });
+      }
+      return response.data.data;
     });
   }
 }

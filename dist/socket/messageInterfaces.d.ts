@@ -1,3 +1,4 @@
+import { ModelData } from 'plump';
 export interface SingletonRequest {
     responseKey: string;
 }
@@ -34,6 +35,7 @@ export interface TokenResponse extends Response {
 export interface TestResponse extends Response {
     response: 'testkey';
     auth: boolean;
+    included?: ModelData[];
 }
 export declare type AuthenticationResponse = InvalidRequestResponse | StartResponse | TokenResponse | TestResponse;
 export interface AuthenticationType {

@@ -5,28 +5,35 @@ import {
   StartResponse,
   TokenResponse,
 } from './messageInterfaces';
+import { RestStore } from '../rest';
 import { Observable, Subject } from 'rxjs';
 import * as ulid from 'ulid';
 
 export function testAuthentication(
-  io: SocketIOClient.Socket,
+  store: RestStore,
   key: string,
 ): Promise<boolean> {
-  return rpc(io, 'auth', {
+  return rpc(store.io, 'auth', {
     request: 'testkey',
     key: key,
   }).then((v: TestResponse) => {
+    if (v.auth && v.included) {
+      v.included.forEach(val => store.fireReadUpdate(val));
+    }
     return v.auth;
   });
 }
 
 export function authenticate(
-  io: SocketIOClient.Socket,
+  store: RestStore,
 ): Observable<TokenResponse | StartResponse> {
   const nonce = ulid();
   const subj = new Subject<TokenResponse | StartResponse>();
-  io.once(nonce, result => {
+  store.io.once(nonce, result => {
     if (result.status === 'success') {
+      if (result.included) {
+        result.included.forEach(val => store.fireReadUpdate(val));
+      }
       subj.next({
         token: result.token,
         response: 'token',
@@ -37,7 +44,7 @@ export function authenticate(
       subj.error(result);
     }
   });
-  rpc(io, 'auth', {
+  rpc(store.io, 'auth', {
     request: 'startauth',
     nonce: nonce,
   }).then((r: StartResponse) => {
