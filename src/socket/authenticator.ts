@@ -43,7 +43,6 @@ export class Authenticator {
     this.you$ = this._you$.asObservable();
     this.nonce = ulid();
     this.store.io.on(this.nonce, (msg: AuthenticationResponse) => {
-      console.log(msg);
       switch (msg.response) {
         case 'token':
           return this.dispatchToken(msg);
