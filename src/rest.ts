@@ -21,8 +21,8 @@ export interface RestOptions extends StorageOptions {
 export class RestStore extends Storage implements TerminalStore {
   public axios: AxiosInstance;
   public io: SocketIOClient.Socket;
-  private options: RestOptions;
-  private _dispatching: Promise<boolean>;
+  public options: RestOptions;
+  public _dispatching: Promise<boolean>;
   constructor(opts: RestOptions) {
     super(opts);
     this.options = Object.assign(

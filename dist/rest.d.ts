@@ -9,8 +9,8 @@ export interface RestOptions extends StorageOptions {
 export declare class RestStore extends Storage implements TerminalStore {
     axios: AxiosInstance;
     io: SocketIOClient.Socket;
-    private options;
-    private _dispatching;
+    options: RestOptions;
+    _dispatching: Promise<boolean>;
     constructor(opts: RestOptions);
     writeAttributes(value: IndefiniteModelData): Promise<ModelData>;
     readAttributes(item: ModelReference): Promise<ModelData>;
