@@ -27,14 +27,14 @@ export class Authenticator {
   public method$: Observable<AuthenticationType[]>;
   public you$: Observable<any>;
 
-  private _key$: Subject<string> = new BehaviorSubject<string>(null);
-  private _state$: Subject<AuthenticatorStates> = new BehaviorSubject<
+  public _key$: Subject<string> = new BehaviorSubject<string>(null);
+  public _state$: Subject<AuthenticatorStates> = new BehaviorSubject<
     AuthenticatorStates
   >('untested');
-  private _method$: Subject<AuthenticationType[]> = new Subject<
+  public _method$: Subject<AuthenticationType[]> = new Subject<
     AuthenticationType[]
   >();
-  private _you$: Subject<any> = new Subject<any>();
+  public _you$: Subject<any> = new Subject<any>();
 
   constructor(public store: RestStore) {
     this.state$ = this._state$.asObservable();

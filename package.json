@@ -1,6 +1,6 @@
 {
   "name": "plump-store-rest",
-  "version": "0.18.1",
+  "version": "0.19.0",
   "description": "REST endpoint storage for Plump",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -25,6 +25,7 @@
     "@types/joi": "^10.4.0",
     "@types/mocha": "^2.2.41",
     "@types/node": "^8.0.19",
+    "@types/socket.io-client": "^1.4.29",
     "boom": "^5.2.0",
     "chai": "^4.1.0",
     "del": "^3.0.0",
@@ -40,15 +41,14 @@
     "ts-node": "^3.3.0",
     "tslint": "^5.5.0",
     "tslint-eslint-rules": "^4.1.1",
-    "plump": "^0.18.0",
-    "typescript": "^2.4.2"
+    "plump": "^0.19.0",
+    "typescript": "2.5.2"
   },
   "dependencies": {
-    "@types/socket.io-client": "^1.4.29",
     "axios": "0.16.2",
     "merge-options": "1.0.0",
-    "rxjs": "^5.4.2",
+    "rxjs": "^5.0.0",
     "socket.io-client": "^2.0.3",
-    "ulid": "^0.2.0"
+    "ulid": "^1.0.0"
   }
 }
