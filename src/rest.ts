@@ -35,8 +35,30 @@ export class RestStore extends Storage implements TerminalStore {
 
     this.axios = this.options.axios || Axios.create(this.options);
     if (this.options.socketURL) {
-      this.io = SocketIO(this.options.socketURL);
+      this.io = SocketIO(this.options.socketURL, { transports: ['websocket'] });
       this.io.on('connect', () => console.log('connected to socket'));
+      this.io.on('plumpUpdate', data => this.updateFromSocket(data));
+    }
+  }
+
+  updateFromSocket(data) {
+    try {
+      if (data.eventType === 'update') {
+        this.fireWriteUpdate({
+          type: data.type,
+          id: data.id,
+          invalidate: ['attributes'],
+        });
+      } else if (data.eventType === 'relationshipCreate') {
+        this.fireWriteUpdate({
+          type: data.type,
+          id: data.id,
+          invalidate: [data.field],
+        });
+      }
+    } catch (e) {
+      console.log('ERROR');
+      console.log(e);
     }
   }
 

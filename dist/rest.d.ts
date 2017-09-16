@@ -12,6 +12,7 @@ export declare class RestStore extends Storage implements TerminalStore {
     options: RestOptions;
     _dispatching: Promise<boolean>;
     constructor(opts: RestOptions);
+    updateFromSocket(data: any): void;
     writeAttributes(value: IndefiniteModelData): Promise<ModelData>;
     readAttributes(item: ModelReference): Promise<ModelData>;
     readRelationship(value: ModelReference, relName: string): Promise<ModelData>;
