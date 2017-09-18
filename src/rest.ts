@@ -55,6 +55,18 @@ export class RestStore extends Storage implements TerminalStore {
           id: data.id,
           invalidate: [data.field],
         });
+      } else if (data.eventType === 'relationshipUpdate') {
+        this.fireWriteUpdate({
+          type: data.type,
+          id: data.id,
+          invalidate: [data.field],
+        });
+      } else if (data.eventType === 'relationshipDelete') {
+        this.fireWriteUpdate({
+          type: data.type,
+          id: data.id,
+          invalidate: [data.field],
+        });
       }
     } catch (e) {
       console.log('ERROR');
