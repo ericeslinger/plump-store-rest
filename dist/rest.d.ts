@@ -1,4 +1,4 @@
-import { AxiosInstance } from 'axios';
+import { AxiosInstance, AxiosPromise } from 'axios';
 import { Storage, StorageOptions, IndefiniteModelData, ModelData, ModelReference, TerminalStore } from 'plump';
 export interface RestOptions extends StorageOptions {
     baseURL?: string;
@@ -10,8 +10,11 @@ export declare class RestStore extends Storage implements TerminalStore {
     axios: AxiosInstance;
     io: SocketIOClient.Socket;
     options: RestOptions;
-    _dispatching: Promise<boolean>;
+    httpInProgress: {
+        [url: string]: AxiosPromise;
+    };
     constructor(opts: RestOptions);
+    debounceGet(url: string): AxiosPromise;
     updateFromSocket(data: any): void;
     writeAttributes(value: IndefiniteModelData): Promise<ModelData>;
     readAttributes(item: ModelReference): Promise<ModelData>;

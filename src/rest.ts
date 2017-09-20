@@ -1,4 +1,4 @@
-import Axios, { AxiosInstance } from 'axios';
+import Axios, { AxiosInstance, AxiosPromise } from 'axios';
 import * as SocketIO from 'socket.io-client';
 // import { testAuthentication } from './socket/authentication.channel';
 
@@ -22,7 +22,7 @@ export class RestStore extends Storage implements TerminalStore {
   public axios: AxiosInstance;
   public io: SocketIOClient.Socket;
   public options: RestOptions;
-  public _dispatching: Promise<boolean>;
+  httpInProgress: { [url: string]: AxiosPromise } = {};
   constructor(opts: RestOptions) {
     super(opts);
     this.options = Object.assign(
@@ -39,6 +39,16 @@ export class RestStore extends Storage implements TerminalStore {
       this.io.on('connect', () => console.log('connected to socket'));
       this.io.on('plumpUpdate', data => this.updateFromSocket(data));
     }
+  }
+
+  debounceGet(url: string): AxiosPromise {
+    if (!this.httpInProgress[url]) {
+      this.httpInProgress[url] = this.axios.get(url).then(v => {
+        delete this.httpInProgress[url];
+        return v;
+      });
+    }
+    return this.httpInProgress[url];
   }
 
   updateFromSocket(data) {
@@ -98,7 +108,7 @@ export class RestStore extends Storage implements TerminalStore {
 
   readAttributes(item: ModelReference): Promise<ModelData> {
     return Promise.resolve()
-      .then(() => this.axios.get(`/${item.type}/${item.id}`))
+      .then(() => this.debounceGet(`/${item.type}/${item.id}`))
       .then(reply => {
         if (reply.status === 404) {
           return null;
@@ -124,8 +134,7 @@ export class RestStore extends Storage implements TerminalStore {
   }
 
   readRelationship(value: ModelReference, relName: string): Promise<ModelData> {
-    return this.axios
-      .get(`/${value.type}/${value.id}/${relName}`)
+    return this.debounceGet(`/${value.type}/${value.id}/${relName}`)
       .then(response => {
         if (response.data.included) {
           response.data.included.forEach(item => {
