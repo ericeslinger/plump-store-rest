@@ -5,6 +5,7 @@ export interface RestOptions extends StorageOptions {
     axios?: AxiosInstance;
     socketURL?: string;
     apiKey?: string;
+    onlyFireSocketEvents?: boolean;
 }
 export declare class RestStore extends Storage implements TerminalStore {
     axios: AxiosInstance;

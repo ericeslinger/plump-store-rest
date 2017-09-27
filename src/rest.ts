@@ -16,6 +16,7 @@ export interface RestOptions extends StorageOptions {
   axios?: AxiosInstance;
   socketURL?: string;
   apiKey?: string;
+  onlyFireSocketEvents?: boolean;
 }
 
 export class RestStore extends Storage implements TerminalStore {
@@ -29,6 +30,7 @@ export class RestStore extends Storage implements TerminalStore {
       {},
       {
         baseURL: 'http://localhost/api',
+        onlyFireSocketEvents: false,
       },
       opts,
     );
@@ -97,11 +99,13 @@ export class RestStore extends Storage implements TerminalStore {
       })
       .then(response => {
         const result = response.data;
-        this.fireWriteUpdate({
-          type: result.type,
-          id: result.id,
-          invalidate: ['attributes'],
-        });
+        if (!this.options.onlyFireSocketEvents) {
+          this.fireWriteUpdate({
+            type: result.type,
+            id: result.id,
+            invalidate: ['attributes'],
+          });
+        }
         return result;
       });
   }
@@ -160,11 +164,13 @@ export class RestStore extends Storage implements TerminalStore {
     return this.axios
       .put(`/${value.type}/${value.id}/${relName}`, child)
       .then(res => {
-        this.fireWriteUpdate({
-          type: value.type,
-          id: value.id,
-          invalidate: [`relationships.${relName}`],
-        });
+        if (!this.options.onlyFireSocketEvents) {
+          this.fireWriteUpdate({
+            type: value.type,
+            id: value.id,
+            invalidate: [`relationships.${relName}`],
+          });
+        }
         return res.data;
       });
   }
@@ -177,22 +183,26 @@ export class RestStore extends Storage implements TerminalStore {
     return this.axios
       .delete(`/${value.type}/${value.id}/${relName}/${child.id}`)
       .then(res => {
-        this.fireWriteUpdate({
-          type: value.type,
-          id: value.id,
-          invalidate: [`relationships.${relName}`],
-        });
+        if (!this.options.onlyFireSocketEvents) {
+          this.fireWriteUpdate({
+            type: value.type,
+            id: value.id,
+            invalidate: [`relationships.${relName}`],
+          });
+        }
         return res.data;
       });
   }
 
   delete(value: ModelReference): Promise<void> {
     return this.axios.delete(`/${value.type}/${value.id}`).then(response => {
-      this.fireWriteUpdate({
-        type: value.type,
-        id: value.id,
-        invalidate: ['attributes'],
-      });
+      if (!this.options.onlyFireSocketEvents) {
+        this.fireWriteUpdate({
+          type: value.type,
+          id: value.id,
+          invalidate: ['attributes'],
+        });
+      }
       return response.data;
     });
   }
