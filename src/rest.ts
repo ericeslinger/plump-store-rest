@@ -32,7 +32,7 @@ export class RestStore extends Storage implements TerminalStore {
         baseURL: 'http://localhost/api',
         onlyFireSocketEvents: false,
       },
-      opts,
+      opts
     );
 
     this.axios = this.options.axios || Axios.create(this.options);
@@ -111,6 +111,10 @@ export class RestStore extends Storage implements TerminalStore {
   }
 
   readAttributes(item: ModelReference): Promise<ModelData> {
+    if (!item.id) {
+      console.log(item);
+      throw new Error('cannot fetch item with no id');
+    }
     return Promise.resolve()
       .then(() => this.debounceGet(`/${item.type}/${item.id}`))
       .then(reply => {
@@ -159,7 +163,7 @@ export class RestStore extends Storage implements TerminalStore {
   writeRelationshipItem(
     value: ModelReference,
     relName: string,
-    child: { id: string | number },
+    child: { id: string | number }
   ): Promise<ModelData> {
     return this.axios
       .put(`/${value.type}/${value.id}/${relName}`, child)
@@ -178,7 +182,7 @@ export class RestStore extends Storage implements TerminalStore {
   deleteRelationshipItem(
     value: ModelReference,
     relName: string,
-    child: { id: string | number },
+    child: { id: string | number }
   ): Promise<ModelData> {
     return this.axios
       .delete(`/${value.type}/${value.id}/${relName}/${child.id}`)
