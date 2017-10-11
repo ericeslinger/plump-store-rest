@@ -32,7 +32,7 @@ export class RestStore extends Storage implements TerminalStore {
         baseURL: 'http://localhost/api',
         onlyFireSocketEvents: false,
       },
-      opts
+      opts,
     );
 
     this.axios = this.options.axios || Axios.create(this.options);
@@ -129,6 +129,14 @@ export class RestStore extends Storage implements TerminalStore {
               this.fireReadUpdate(includedData);
             });
           }
+          const schema = this.getSchema(item.type);
+          Object.keys(schema.attributes)
+            .filter(attr => schema.attributes[attr].type === 'date')
+            .forEach(dateAttr => {
+              result.attributes[dateAttr] = new Date(
+                result.attributes[dateAttr],
+              );
+            });
           return result;
         }
       })
@@ -163,7 +171,7 @@ export class RestStore extends Storage implements TerminalStore {
   writeRelationshipItem(
     value: ModelReference,
     relName: string,
-    child: { id: string | number }
+    child: { id: string | number },
   ): Promise<ModelData> {
     return this.axios
       .put(`/${value.type}/${value.id}/${relName}`, child)
@@ -182,7 +190,7 @@ export class RestStore extends Storage implements TerminalStore {
   deleteRelationshipItem(
     value: ModelReference,
     relName: string,
-    child: { id: string | number }
+    child: { id: string | number },
   ): Promise<ModelData> {
     return this.axios
       .delete(`/${value.type}/${value.id}/${relName}/${child.id}`)

@@ -2,7 +2,7 @@
 /* eslint no-shadow: 0, max-len: 0 */
 
 import { TestType } from './testType';
-import { MemoryStore, Plump } from 'plump';
+import { MemoryStore, Plump, Schema, Model, ModelData } from 'plump';
 import * as mergeOptions from 'merge-options';
 
 import * as chai from 'chai';
@@ -93,7 +93,44 @@ export function testSuite(context, storeOpts) {
           });
         });
       });
-
+      context.it('supports storing and retrieving dates in Date format', () => {
+        @Schema({
+          name: 'datedTests',
+          idAttribute: 'id',
+          attributes: {
+            id: { type: 'number', readOnly: true },
+            name: { type: 'string' },
+            when: { type: 'date' },
+          },
+          relationships: {},
+          storeData: {
+            sql: {
+              tableName: 'datedTests',
+            },
+          },
+        })
+        class DatedType extends Model<ModelData> {
+          static type = 'datedTests';
+        }
+        return actualStore.addSchema(DatedType).then(() => {
+          const theDate = new Date();
+          return actualStore
+            .writeAttributes({
+              type: 'datedTests',
+              attributes: {
+                name: 'datarino',
+                when: theDate,
+              },
+            })
+            .then(inserted => {
+              return actualStore.read({ type: 'datedTests', id: inserted.id });
+            })
+            .then(v => {
+              expect(v.attributes.when instanceof Date).to.equal(true);
+              expect(v.attributes.when.getTime()).to.equal(theDate.getTime());
+            });
+        });
+      });
       context.it('allows for deletion of objects by id', () => {
         return actualStore.writeAttributes(sampleObject).then(createdObject => {
           return actualStore
