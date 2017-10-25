@@ -1,34 +1,51 @@
-import { MemoryStore, ModelData } from 'plump';
+import { MemoryStore, ModelData, Schema, Model } from 'plump';
 import Axios, { AxiosResponse, AxiosInstance } from 'axios';
 import { TestType } from './testType';
 
 const backingStore = new MemoryStore({ terminal: true });
+@Schema({
+  name: 'datedTests',
+  idAttribute: 'id',
+  attributes: {
+    id: { type: 'number', readOnly: true },
+    name: { type: 'string' },
+    when: { type: 'date' },
+  },
+  relationships: {},
+  storeData: {
+    sql: {
+      tableName: 'datedTests',
+    },
+  },
+})
+class DatedType extends Model<ModelData> {
+  static type = 'datedTests';
+}
 export function init() {
-  return backingStore.addSchema(TestType);
+  return backingStore.addSchemas([TestType, DatedType]);
 }
 
 function axiosAdapter(config): Promise<AxiosResponse> {
   return Promise.resolve()
     .then(() => {
       const method = config.method;
-      const matchBase = config.url.match(new RegExp(`^/${TestType.type}$`));
-      const matchItem = config.url.match(
-        new RegExp(`^/${TestType.type}/(\\d+)$`)
-      );
+      const matchBase = config.url.match(new RegExp(`^/(\\w+)`));
+      const matchItem = config.url.match(new RegExp(`^/(\\w+)/(\\d+)$`));
       const matchSideBase = config.url.match(
-        new RegExp(`^/${TestType.type}/(\\d+)/(\\w+)$`)
+        new RegExp(`^/(\\w+)/(\\d+)/(\\w+)$`),
       );
       const matchSideItem = config.url.match(
-        new RegExp(`^/${TestType.type}/(\\d+)/(\\w+)/(\\d+)$`)
+        new RegExp(`^/(\\w+)/(\\d+)/(\\w+)/(\\d+)$`),
       );
       const match =
         matchSideItem || matchSideBase || matchItem || matchBase || [];
 
       const request = {
         typeCheck: match.length === 1,
-        id: parseInt(match[1], 10),
-        relationship: match[2],
-        childId: parseInt(match[3], 10)
+        type: match[1],
+        id: parseInt(match[2], 10),
+        relationship: match[3],
+        childId: parseInt(match[4], 10),
       };
       const data = config.data ? JSON.parse(config.data) : undefined;
 
@@ -54,7 +71,7 @@ function axiosAdapter(config): Promise<AxiosResponse> {
           status: 200,
           statusText: 'OK',
           headers: '',
-          config: config
+          config: config,
         };
         return retVal;
       } else {
@@ -63,7 +80,7 @@ function axiosAdapter(config): Promise<AxiosResponse> {
           statusText: 'Not found.',
           headers: '',
           config: config,
-          data: null
+          data: null,
         };
       }
     });
@@ -73,13 +90,13 @@ function handleGet(request): Promise<ModelData> {
   return Promise.resolve().then(() => {
     if (request.relationship) {
       return backingStore.readRelationship(
-        { type: TestType.type, id: request.id },
-        request.relationship
+        { type: request.type, id: request.id },
+        request.relationship,
       );
     } else {
-      return backingStore.read({ type: TestType.type, id: request.id }, [
+      return backingStore.read({ type: request.type, id: request.id }, [
         'attributes',
-        'relationships'
+        'relationships',
       ]);
     }
     // }).then(v => {
@@ -95,39 +112,39 @@ function handlePost(request, data): Promise<ModelData> {
 
 function handlePatchAttributes(request, data): Promise<ModelData> {
   return backingStore.writeAttributes(
-    Object.assign({}, data, { id: request.id, type: TestType.type })
+    Object.assign({}, data, { id: request.id, type: request.type }),
   );
 }
 
 function handlePatchRelationship(request, data): Promise<ModelData> {
   return backingStore.writeRelationshipItem(
-    { type: TestType.type, id: request.id },
+    { type: request.type, id: request.id },
     request.relationship,
-    { id: request.childId, meta: data }
+    { id: request.childId, meta: data },
   );
 }
 
 function handlePut(request, data): Promise<ModelData> {
   return backingStore.writeRelationshipItem(
-    { type: TestType.type, id: request.id },
+    { type: request.type, id: request.id },
     request.relationship,
-    data
+    data,
   );
 }
 
 function handleDelete(request): Promise<ModelData | void> {
   if (!request.relationship) {
-    return backingStore.delete({ type: TestType.type, id: request.id });
+    return backingStore.delete({ type: request.type, id: request.id });
   } else {
     return backingStore.deleteRelationshipItem(
-      { type: TestType.type, id: request.id },
+      { type: request.type, id: request.id },
       request.relationship,
-      { id: request.childId }
+      { id: request.childId },
     );
   }
 }
 
 export const mockedAxios: AxiosInstance = Axios.create({
   baseURL: '',
-  adapter: axiosAdapter
+  adapter: axiosAdapter,
 });
