@@ -1,4 +1,4 @@
-import * as ulid from 'ulid';
+import { ulid } from 'ulid';
 import { Subject, Observable, BehaviorSubject } from 'rxjs';
 import { RestStore } from '../rest';
 import { rpc } from './socket';
