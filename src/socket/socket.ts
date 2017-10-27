@@ -4,7 +4,7 @@ import {
   SingletonRequest,
   Response,
 } from './messageInterfaces';
-import * as ulid from 'ulid';
+import { ulid } from 'ulid';
 
 export function rpc<T extends Response>(
   io: SocketIOClient.Socket,
