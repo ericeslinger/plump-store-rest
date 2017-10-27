@@ -18,6 +18,7 @@ export declare class RestStore extends Storage implements TerminalStore {
     debounceGet(url: string): AxiosPromise;
     updateFromSocket(data: any): void;
     writeAttributes(value: IndefiniteModelData): Promise<ModelData>;
+    fixDates(d: ModelData): any;
     readAttributes(item: ModelReference): Promise<ModelData>;
     readRelationship(value: ModelReference, relName: string): Promise<ModelData>;
     writeRelationshipItem(value: ModelReference, relName: string, child: {

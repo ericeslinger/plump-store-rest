@@ -1,5 +1,6 @@
 import Axios, { AxiosInstance, AxiosPromise } from 'axios';
 import * as SocketIO from 'socket.io-client';
+import * as mergeOptions from 'merge-options';
 // import { testAuthentication } from './socket/authentication.channel';
 
 import {
@@ -110,6 +111,19 @@ export class RestStore extends Storage implements TerminalStore {
       });
   }
 
+  fixDates(d: ModelData) {
+    const schema = this.getSchema(d.type);
+    const override = {
+      attributes: {},
+    };
+    Object.keys(schema.attributes)
+      .filter(attr => schema.attributes[attr].type === 'date')
+      .forEach(dateAttr => {
+        override.attributes[dateAttr] = new Date(d.attributes[dateAttr]);
+      });
+    return mergeOptions({}, d, override);
+  }
+
   readAttributes(item: ModelReference): Promise<ModelData> {
     if (!item.id) {
       console.log(item);
@@ -126,18 +140,18 @@ export class RestStore extends Storage implements TerminalStore {
           const result = reply.data;
           if (result.included) {
             result.included.forEach(includedData => {
-              this.fireReadUpdate(includedData);
+              this.fireReadUpdate(this.fixDates(includedData));
             });
           }
-          const schema = this.getSchema(item.type);
-          Object.keys(schema.attributes)
-            .filter(attr => schema.attributes[attr].type === 'date')
-            .forEach(dateAttr => {
-              result.attributes[dateAttr] = new Date(
-                result.attributes[dateAttr],
-              );
-            });
-          return result;
+          // const schema = this.getSchema(item.type);
+          // Object.keys(schema.attributes)
+          //   .filter(attr => schema.attributes[attr].type === 'date')
+          //   .forEach(dateAttr => {
+          //     result.attributes[dateAttr] = new Date(
+          //       result.attributes[dateAttr],
+          //     );
+          //   });
+          return this.fixDates(result);
         }
       })
       .catch(err => {
