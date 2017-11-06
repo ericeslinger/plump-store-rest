@@ -240,7 +240,7 @@ export class RestStore extends Storage implements TerminalStore {
           this.fireReadUpdate(item);
         });
       }
-      return response.data.data;
+      return response.data.data.map(v => this.fixDates(v));
     });
   }
 }
