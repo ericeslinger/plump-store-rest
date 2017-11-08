@@ -112,6 +112,9 @@ export class RestStore extends Storage implements TerminalStore {
   }
 
   fixDates(d: ModelData) {
+    if (!d.attributes) {
+      return d;
+    }
     const schema = this.getSchema(d.type);
     const override = {
       attributes: {},
