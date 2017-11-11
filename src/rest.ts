@@ -58,8 +58,8 @@ export class RestStore extends Storage implements TerminalStore {
     try {
       if (data.eventType === 'update') {
         this.fireWriteUpdate({
-          type: data.type,
-          id: data.id,
+          type: data.item.type,
+          id: data.item.id,
           invalidate: ['attributes'],
         });
       } else if (data.eventType === 'relationshipCreate') {
@@ -112,6 +112,9 @@ export class RestStore extends Storage implements TerminalStore {
   }
 
   fixDates(d: ModelData) {
+    if (!d.attributes) {
+      return d;
+    }
     const schema = this.getSchema(d.type);
     const override = {
       attributes: {},
@@ -237,10 +240,10 @@ export class RestStore extends Storage implements TerminalStore {
     return this.axios.get(`/${type}`, { params: q }).then(response => {
       if (response.data.included) {
         response.data.included.forEach(item => {
-          this.fireReadUpdate(item);
+          this.fireReadUpdate(this.fixDates(item));
         });
       }
-      return response.data.data;
+      return response.data.data.map(v => this.fixDates(v));
     });
   }
 }

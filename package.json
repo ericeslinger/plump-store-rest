@@ -1,6 +1,6 @@
 {
   "name": "plump-store-rest",
-  "version": "0.20.2",
+  "version": "0.20.3",
   "description": "REST endpoint storage for Plump",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
