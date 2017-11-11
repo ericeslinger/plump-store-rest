@@ -58,8 +58,8 @@ export class RestStore extends Storage implements TerminalStore {
     try {
       if (data.eventType === 'update') {
         this.fireWriteUpdate({
-          type: data.type,
-          id: data.id,
+          type: data.item.type,
+          id: data.item.id,
           invalidate: ['attributes'],
         });
       } else if (data.eventType === 'relationshipCreate') {
