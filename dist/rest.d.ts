@@ -1,5 +1,6 @@
+/// <reference types="socket.io-client" />
 import { AxiosInstance, AxiosPromise } from 'axios';
-import { Storage, StorageOptions, IndefiniteModelData, ModelData, ModelReference, TerminalStore } from 'plump';
+import { Storage, StorageOptions, IndefiniteModelData, ModelData, ModelReference, TerminalStore, StorageReadRequest } from 'plump';
 export interface RestOptions extends StorageOptions {
     baseURL?: string;
     axios?: AxiosInstance;
@@ -19,8 +20,8 @@ export declare class RestStore extends Storage implements TerminalStore {
     updateFromSocket(data: any): void;
     writeAttributes(value: IndefiniteModelData): Promise<ModelData>;
     fixDates(d: ModelData): any;
-    readAttributes(item: ModelReference): Promise<ModelData>;
-    readRelationship(value: ModelReference, relName: string): Promise<ModelData>;
+    readAttributes(req: StorageReadRequest): Promise<ModelData>;
+    readRelationship(req: StorageReadRequest): Promise<ModelData>;
     writeRelationshipItem(value: ModelReference, relName: string, child: {
         id: string | number;
     }): Promise<ModelData>;

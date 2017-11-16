@@ -10,6 +10,7 @@ import {
   ModelData,
   ModelReference,
   TerminalStore,
+  StorageReadRequest,
 } from 'plump';
 
 export interface RestOptions extends StorageOptions {
@@ -127,13 +128,13 @@ export class RestStore extends Storage implements TerminalStore {
     return mergeOptions({}, d, override);
   }
 
-  readAttributes(item: ModelReference): Promise<ModelData> {
-    if (!item.id) {
-      console.log(item);
-      throw new Error('cannot fetch item with no id');
+  readAttributes(req: StorageReadRequest): Promise<ModelData> {
+    let url: string = `/${req.item.type}/${req.item.id}`;
+    if (req.view) {
+      url = `${url}?view=${req.view}`;
     }
     return Promise.resolve()
-      .then(() => this.debounceGet(`/${item.type}/${item.id}`))
+      .then(() => this.debounceGet(url))
       .then(reply => {
         if (reply.status === 404) {
           return null;
@@ -166,8 +167,8 @@ export class RestStore extends Storage implements TerminalStore {
       });
   }
 
-  readRelationship(value: ModelReference, relName: string): Promise<ModelData> {
-    return this.debounceGet(`/${value.type}/${value.id}/${relName}`)
+  readRelationship(req: StorageReadRequest): Promise<ModelData> {
+    return this.debounceGet(`/${req.item.type}/${req.item.id}/${req.rel}`)
       .then(response => {
         if (response.data.included) {
           response.data.included.forEach(item => {

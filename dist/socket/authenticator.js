@@ -1,20 +1,34 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-var ulid_1 = require("ulid");
-var rxjs_1 = require("rxjs");
-var Authenticator = (function () {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.Authenticator = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _ulid = require('ulid');
+
+var _rxjs = require('rxjs');
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Authenticator = exports.Authenticator = function () {
     function Authenticator(store) {
         var _this = this;
+
+        _classCallCheck(this, Authenticator);
+
         this.store = store;
-        this._key$ = new rxjs_1.BehaviorSubject(null);
-        this._state$ = new rxjs_1.BehaviorSubject('untested');
-        this._method$ = new rxjs_1.Subject();
-        this._you$ = new rxjs_1.Subject();
+        this._key$ = new _rxjs.BehaviorSubject(null);
+        this._state$ = new _rxjs.BehaviorSubject('untested');
+        this._method$ = new _rxjs.Subject();
+        this._you$ = new _rxjs.Subject();
         this.state$ = this._state$.asObservable();
         this.key$ = this._key$.asObservable();
         this.method$ = this._method$.asObservable();
         this.you$ = this._you$.asObservable();
-        this.nonce = ulid_1.ulid();
+        this.nonce = (0, _ulid.ulid)();
         this.store.io.on(this.nonce, function (msg) {
             switch (msg.response) {
                 case 'token':
@@ -28,58 +42,73 @@ var Authenticator = (function () {
             }
         });
     }
-    Authenticator.prototype.dispatchToken = function (msg) {
-        if (msg.status === 'success') {
-            this._state$.next('testing');
-            this.attemptKey(msg.token);
-        }
-    };
-    Authenticator.prototype.dispatchStart = function (msg) {
-        this._method$.next(msg.types);
-    };
-    Authenticator.prototype.dispatchInvalid = function (msg) {
-        this._state$.next('error');
-        console.log('Error - invalid authentication channel message sent');
-        console.log(msg);
-    };
-    Authenticator.prototype.dispatchTestKey = function (msg) {
-        var _this = this;
-        if (msg.auth === true) {
-            this.store.axios.defaults.headers.common['Authorization'] = "Bearer " + msg.token;
-            this._key$.next(msg.token);
-            if (msg.you) {
-                this._you$.next(msg.you);
-            }
-            if (msg.included) {
-                msg.included.forEach(function (val) { return _this.store.fireReadUpdate(val); });
-            }
-            this._state$.next('ready');
-        }
-        else {
-            console.log('invalid key');
-            this.initiateLogin();
-        }
-    };
-    Authenticator.prototype.attemptKey = function (k) {
-        this._state$.next('testing');
-        var req = {
-            request: 'testkey',
-            key: k,
-            responseKey: this.nonce,
-        };
-        this.store.io.emit('auth', req);
-    };
-    Authenticator.prototype.initiateLogin = function () {
-        this._state$.next('invalid');
-        var req = {
-            request: 'startauth',
-            nonce: this.nonce,
-            responseKey: this.nonce,
-        };
-        this.store.io.emit('auth', req);
-    };
-    return Authenticator;
-}());
-exports.Authenticator = Authenticator;
 
-//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uL3NyYy9zb2NrZXQvYXV0aGVudGljYXRvci50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOztBQUFBLDZCQUE0QjtBQUM1Qiw2QkFBNEQ7QUFvQjVEO0lBaUJFLHVCQUFtQixLQUFnQjtRQUFuQyxpQkFrQkM7UUFsQmtCLFVBQUssR0FBTCxLQUFLLENBQVc7UUFUNUIsVUFBSyxHQUFvQixJQUFJLHNCQUFlLENBQVMsSUFBSSxDQUFDLENBQUM7UUFDM0QsWUFBTyxHQUFpQyxJQUFJLHNCQUFlLENBRWhFLFVBQVUsQ0FBQyxDQUFDO1FBQ1AsYUFBUSxHQUFrQyxJQUFJLGNBQU8sRUFFekQsQ0FBQztRQUNHLFVBQUssR0FBaUIsSUFBSSxjQUFPLEVBQU8sQ0FBQztRQUc5QyxJQUFJLENBQUMsTUFBTSxHQUFHLElBQUksQ0FBQyxPQUFPLENBQUMsWUFBWSxFQUFFLENBQUM7UUFDMUMsSUFBSSxDQUFDLElBQUksR0FBRyxJQUFJLENBQUMsS0FBSyxDQUFDLFlBQVksRUFBRSxDQUFDO1FBQ3RDLElBQUksQ0FBQyxPQUFPLEdBQUcsSUFBSSxDQUFDLFFBQVEsQ0FBQyxZQUFZLEVBQUUsQ0FBQztRQUM1QyxJQUFJLENBQUMsSUFBSSxHQUFHLElBQUksQ0FBQyxLQUFLLENBQUMsWUFBWSxFQUFFLENBQUM7UUFDdEMsSUFBSSxDQUFDLEtBQUssR0FBRyxXQUFJLEVBQUUsQ0FBQztRQUNwQixJQUFJLENBQUMsS0FBSyxDQUFDLEVBQUUsQ0FBQyxFQUFFLENBQUMsSUFBSSxDQUFDLEtBQUssRUFBRSxVQUFDLEdBQTJCO1lBQ3ZELE1BQU0sQ0FBQyxDQUFDLEdBQUcsQ0FBQyxRQUFRLENBQUMsQ0FBQyxDQUFDO2dCQUNyQixLQUFLLE9BQU87b0JBQ1YsTUFBTSxDQUFDLEtBQUksQ0FBQyxhQUFhLENBQUMsR0FBRyxDQUFDLENBQUM7Z0JBQ2pDLEtBQUssV0FBVztvQkFDZCxNQUFNLENBQUMsS0FBSSxDQUFDLGFBQWEsQ0FBQyxHQUFHLENBQUMsQ0FBQztnQkFDakMs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LEtBQUs7WUFDakIsV0FBVyxFQUFFLElBQUksQ0FBQyxLQUFLO1NBQ3hCLENBQUM7UUFDRixJQUFJLENBQUMsS0FBSyxDQUFDLEVBQUUsQ0FBQyxJQUFJLENBQUMsTUFBTSxFQUFFLEdBQUcsQ0FBQyxDQUFDO0lBQ2xDLENBQUM7SUFDSCxvQkFBQztBQUFELENBN0ZBLEFBNkZDLElBQUE7QUE3Rlksc0NBQWEiLCJmaWxlIjoic29ja2V0L2F1dGhlbnRpY2F0b3IuanMiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyB1bGlkIH0gZnJvbSAndWxpZCc7XG5pbXBvcnQgeyBTdWJqZWN0LCBPYnNlcnZhYmxlLCBCZWhhdmlvclN1YmplY3QgfSBmcm9tICdyeGpzJztcbmltcG9ydCB7IFJlc3RTdG9yZSB9IGZyb20gJy4uL3Jlc3QnO1xuaW1wb3J0IHsgcnBjIH0gZnJvbSAnLi9zb2NrZXQnO1xuaW1wb3J0IHtcbiAgVGVzdEtleUF1dGhlbnRpY2F0aW9uUmVxdWVzdCxcbiAgU3RhcnRBdXRoZW50aWNhdGlvblJlcXVlc3QsXG4gIFN0YXJ0UmVzcG9uc2UsXG4gIFRva2VuUmVzcG9uc2UsXG4gIFRlc3RSZXNwb25zZSxcbiAgQXV0aGVudGljYXRpb25SZXNwb25zZSxcbiAgQXV0aGVudGljYXRpb25UeXBlLFxufSBmcm9tICcuL21lc3NhZ2VJbnRlcmZhY2VzJztcblxuZXhwb3J0IHR5cGUgQXV0aGVudGljYXRvclN0YXRlcyA9XG4gIHwgJ3JlYWR5J1xuICB8ICd1bnRlc3RlZCdcbiAgfCAnZXJyb3InXG4gIHwgJ3Rlc3RpbmcnXG4gIHwgJ2ludmFsaWQnO1xuXG5leHBvcnQgY2xhc3MgQXV0aGVudGljYXRvciB7XG4gIHB1YmxpYyBub25jZTogc3RyaW5nO1xuXG4gIHB1YmxpYyBrZXkkOiBPYnNlcnZhYmxlPHN0cmluZz47XG4gIHB1YmxpYyBzdGF0ZSQ6IE9ic2VydmFibGU8QXV0aGVudGljYXRvclN0YXRlcz47XG4gIHB1YmxpYyBtZXRob2QkOiBPYnNlcnZhYmxlPEF1dGhlbnRpY2F0aW9uVHlwZVtdPjtcbiAgcHVibGljIHlvdSQ6IE9ic2VydmFibGU8YW55PjtcblxuICBwdWJsaWMgX2tleSQ6IFN1YmplY3Q8c3RyaW5nPiA9IG5ldyBCZWhhdmlvclN1YmplY3Q8c3RyaW5nPihudWxsKTtcbiAgcHVibGljIF9zdGF0ZSQ6IFN1YmplY3Q8QXV0aGVudGljYXRvclN0YXRlcz4gPSBuZXcgQmVoYXZpb3JTdWJqZWN0PFxuICAgIEF1dGhlbnRpY2F0b3JTdGF0ZXNcbiAgPigndW50ZXN0ZWQnKTtcbiAgcHVibGljIF9tZXRob2QkOiBTdWJqZWN0PEF1dGhlbnRpY2F0aW9uVHlwZVtdPiA9IG5ldyBTdWJqZWN0PFxuICAgIEF1dGhlbnRpY2F0aW9uVHlwZVtdXG4gID4oKTtcbiAgcHVibGljIF95b3UkOiBTdWJqZWN0PGFueT4gPSBuZXcgU3ViamVjdDxhbnk+KCk7XG5cbiAgY29uc3RydWN0b3IocHVibGljIHN0b3JlOiBSZXN0U3RvcmUpIHtcbiAgICB0aGlzLnN0YXRlJCA9IHRoaXMuX3N0YXRlJC5hc09ic2VydmFibGUoKTtcbiAgICB0aGlzLmtleSQgPSB0aGlzLl9rZXkkLmFzT2JzZXJ2YWJsZSgpO1xuICAgIHRoaXMubWV0aG9kJCA9IHRoaXMuX21ldGhvZCQuYXNPYnNlcnZhYmxlKCk7XG4gICAgdGhpcy55b3UkID0gdGhpcy5feW91JC5hc09ic2VydmFibGUoKTtcbiAgICB0aGlzLm5vbmNlID0gdWxpZCgpO1xuICAgIHRoaXMuc3RvcmUuaW8ub24odGhpcy5ub25jZSwgKG1zZzogQXV0aGVudGljYXRpb25SZXNwb25zZSkgPT4ge1xuICAgICAgc3dpdGNoIChtc2cucmVzcG9uc2UpIHtcbiAgICAgICAgY2FzZSAndG9rZW4nOlxuICAgICAgICAgIHJldHVybiB0aGlzLmRpc3BhdGNoVG9rZW4obXNnKTtcbiAgICAgICAgY2FzZSAnc3RhcnRhdXRoJzpcbiAgICAgICAgICByZXR1cm4gdGhpcy5kaXNwYXRjaFN0YXJ0KG1zZyk7XG4gICAgICAgIGNhc2UgJ2ludmFsaWRSZXF1ZXN0JzpcbiAgICAgICAgICByZXR1cm4gdGhpcy5kaXNwYXRjaEludmFsaWQobXNnKTtcbiAgICAgICAgY2FzZSAndGVzdGtleSc6XG4gICAgICAgICAgcmV0dXJuIHRoaXMuZGlzcGF0Y2hUZXN0S2V5KG1zZyk7XG4gICAgICB9XG4gICAgfSk7XG4gIH1cblxuICBkaXNwYXRjaFRva2VuKG1zZzogVG9rZW5SZXNwb25zZSkge1xuICAgIGlmIChtc2cuc3RhdHVzID09PSAnc3VjY2VzcycpIHtcbiAgICAgIHRoaXMuX3N0YXRlJC5uZXh0KCd0ZXN0aW5nJyk7XG4gICAgICB0aGlzLmF0dGVtcHRLZXkobXNnLnRva2VuKTtcbiAgICB9XG4gIH1cblxuICBkaXNwYXRjaFN0YXJ0KG1zZzogU3RhcnRSZXNwb25zZSkge1xuICAgIHRoaXMuX21ldGhvZCQubmV4dChtc2cudHlwZXMpO1xuICB9XG5cbiAgZGlzcGF0Y2hJbnZhbGlkKG1zZykge1xuICAgIHRoaXMuX3N0YXRlJC5uZXh0KCdlcnJvcicpO1xuICAgIGNvbnNvbGUubG9nKCdFcnJvciAtIGludmFsaWQgYXV0aGVudGljYXRpb24gY2hhbm5lbCBtZXNzYWdlIHNlbnQnKTtcbiAgICBjb25zb2xlLmxvZyhtc2cpO1xuICB9XG5cbiAgZGlzcGF0Y2hUZXN0S2V5KG1zZzogVGVzdFJlc3BvbnNlKSB7XG4gICAgaWYgKG1zZy5hdXRoID09PSB0cnVlKSB7XG4gICAgICB0aGlzLnN0b3JlLmF4aW9zLmRlZmF1bHRzLmhlYWRlcnMuY29tbW9uW1xuICAgICAgICAnQXV0aG9yaXphdGlvbidcbiAgICAgIF0gPSBgQmVhcmVyICR7bXNnLnRva2VufWA7XG4gICAgICB0aGlzLl9rZXkkLm5leHQobXNnLnRva2VuKTtcbiAgICAgIGlmIChtc2cueW91KSB7XG4gICAgICAgIHRoaXMuX3lvdSQubmV4dChtc2cueW91KTtcbiAgICAgIH1cbiAgICAgIGlmIChtc2cuaW5jbHVkZWQpIHtcbiAgICAgICAgbXNnLmluY2x1ZGVkLmZvckVhY2godmFsID0+IHRoaXMuc3RvcmUuZmlyZVJlYWRVcGRhdGUodmFsKSk7XG4gICAgICB9XG4gICAgICB0aGlzLl9zdGF0ZSQubmV4dCgncmVhZHknKTtcbiAgICB9IGVsc2Uge1xuICAgICAgY29uc29sZS5sb2coJ2ludmFsaWQga2V5Jyk7XG4gICAgICB0aGlzLmluaXRpYXRlTG9naW4oKTtcbiAgICB9XG4gICAgLyogbm9vcCAqL1xuICB9XG5cbiAgYXR0ZW1wdEtleShrOiBzdHJpbmcpIHtcbiAgICB0aGlzLl9zdGF0ZSQubmV4dCgndGVzdGluZycpO1xuICAgIGNvbnN0IHJlcTogVGVzdEtleUF1dGhlbnRpY2F0aW9uUmVxdWVzdCA9IHtcbiAgICAgIHJlcXVlc3Q6ICd0ZXN0a2V5JyxcbiAgICAgIGtleTogayxcbiAgICAgIHJlc3BvbnNlS2V5OiB0aGlzLm5vbmNlLFxuICAgIH07XG4gICAgdGhpcy5zdG9yZS5pby5lbWl0KCdhdXRoJywgcmVxKTtcbiAgfVxuXG4gIGluaXRpYXRlTG9naW4oKSB7XG4gICAgdGhpcy5fc3RhdGUkLm5leHQoJ2ludmFsaWQnKTtcbiAgICBjb25zdCByZXE6IFN0YXJ0QXV0aGVudGljYXRpb25SZXF1ZXN0ID0ge1xuICAgICAgcmVxdWVzdDogJ3N0YXJ0YXV0aCcsXG4gICAgICBub25jZTogdGhpcy5ub25jZSxcbiAgICAgIHJlc3BvbnNlS2V5OiB0aGlzLm5vbmNlLFxuICAgIH07XG4gICAgdGhpcy5zdG9yZS5pby5lbWl0KCdhdXRoJywgcmVxKTtcbiAgfVxufVxuIl19
+    _createClass(Authenticator, [{
+        key: 'dispatchToken',
+        value: function dispatchToken(msg) {
+            if (msg.status === 'success') {
+                this._state$.next('testing');
+                this.attemptKey(msg.token);
+            }
+        }
+    }, {
+        key: 'dispatchStart',
+        value: function dispatchStart(msg) {
+            this._method$.next(msg.types);
+        }
+    }, {
+        key: 'dispatchInvalid',
+        value: function dispatchInvalid(msg) {
+            this._state$.next('error');
+            console.log('Error - invalid authentication channel message sent');
+            console.log(msg);
+        }
+    }, {
+        key: 'dispatchTestKey',
+        value: function dispatchTestKey(msg) {
+            var _this2 = this;
+
+            if (msg.auth === true) {
+                this.store.axios.defaults.headers.common['Authorization'] = 'Bearer ' + msg.token;
+                this._key$.next(msg.token);
+                if (msg.you) {
+                    this._you$.next(msg.you);
+                }
+                if (msg.included) {
+                    msg.included.forEach(function (val) {
+                        return _this2.store.fireReadUpdate(val);
+                    });
+                }
+                this._state$.next('ready');
+            } else {
+                console.log('invalid key');
+                this.initiateLogin();
+            }
+            /* noop */
+        }
+    }, {
+        key: 'attemptKey',
+        value: function attemptKey(k) {
+            this._state$.next('testing');
+            var req = {
+                request: 'testkey',
+                key: k,
+                responseKey: this.nonce
+            };
+            this.store.io.emit('auth', req);
+        }
+    }, {
+        key: 'initiateLogin',
+        value: function initiateLogin() {
+            this._state$.next('invalid');
+            var req = {
+                request: 'startauth',
+                nonce: this.nonce,
+                responseKey: this.nonce
+            };
+            this.store.io.emit('auth', req);
+        }
+    }]);
+
+    return Authenticator;
+}();
