@@ -12,11 +12,6 @@ const backingStore = new MemoryStore({ terminal: true });
     when: { type: 'date' },
   },
   relationships: {},
-  storeData: {
-    sql: {
-      tableName: 'datedTests',
-    },
-  },
 })
 class DatedType extends Model<ModelData> {
   static type = 'datedTests';
@@ -30,13 +25,17 @@ function axiosAdapter(config): Promise<AxiosResponse> {
     .then(() => {
       const method = config.method;
       const matchBase = config.url.match(new RegExp(`^/(\\w+)`));
-      const matchItem = config.url.match(new RegExp(`^/(\\w+)/(\\d+)$`));
+      const matchItem = config.url.match(new RegExp(`^/(\\w+)/(\\d+)`));
       const matchSideBase = config.url.match(
         new RegExp(`^/(\\w+)/(\\d+)/(\\w+)$`),
       );
       const matchSideItem = config.url.match(
         new RegExp(`^/(\\w+)/(\\d+)/(\\w+)/(\\d+)$`),
       );
+      const viewMatch =
+        config.url.indexOf('?view=') >= 0
+          ? config.url.substr(config.url.indexOf('?view=') + '?view='.length)
+          : false;
       const match =
         matchSideItem || matchSideBase || matchItem || matchBase || [];
 
@@ -46,6 +45,7 @@ function axiosAdapter(config): Promise<AxiosResponse> {
         id: parseInt(match[2], 10),
         relationship: match[3],
         childId: parseInt(match[4], 10),
+        view: viewMatch,
       };
       const data = config.data ? JSON.parse(config.data) : undefined;
 
@@ -89,15 +89,24 @@ function axiosAdapter(config): Promise<AxiosResponse> {
 function handleGet(request): Promise<ModelData> {
   return Promise.resolve().then(() => {
     if (request.relationship) {
-      return backingStore.readRelationship(
-        { type: request.type, id: request.id },
-        request.relationship,
-      );
+      return backingStore.readRelationship({
+        item: { type: request.type, id: request.id },
+        fields: [`relationships.${request.relationship}`],
+        rel: request.relationship,
+      });
+    } else if (request.view) {
+      return {
+        type: request.type,
+        id: request.id,
+        attributes: {},
+        relationships: {},
+        [request.view]: true,
+      };
     } else {
-      return backingStore.read({ type: request.type, id: request.id }, [
-        'attributes',
-        'relationships',
-      ]);
+      return backingStore.read({
+        item: { type: request.type, id: request.id },
+        fields: ['attributes', 'relationships'],
+      });
     }
     // }).then(v => {
     //   return {
@@ -120,7 +129,7 @@ function handlePatchRelationship(request, data): Promise<ModelData> {
   return backingStore.writeRelationshipItem(
     { type: request.type, id: request.id },
     request.relationship,
-    { id: request.childId, meta: data },
+    { id: request.childId, type: request.type, meta: data },
   );
 }
 
@@ -139,7 +148,7 @@ function handleDelete(request): Promise<ModelData | void> {
     return backingStore.deleteRelationshipItem(
       { type: request.type, id: request.id },
       request.relationship,
-      { id: request.childId },
+      { id: request.childId, type: request.type },
     );
   }
 }

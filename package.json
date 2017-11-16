@@ -1,22 +1,18 @@
 {
   "name": "plump-store-rest",
-  "version": "0.20.3",
-  "description": "REST endpoint storage for Plump",
+  "version": "0.25.0",
+  "description": "REST endpoint store for Plump",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "mocha  --require ts-node/register test/*.spec.ts"
+    "test":
+      "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' mocha  --compilers ts:ts-node/register test/*.spec.ts"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kstf/plump-store-rest.git"
+    "url": "git+https://github.com/plumpstack/plump-store-rest.git"
   },
-  "keywords": [
-    "typescript",
-    "orm",
-    "datastore",
-    "activerecord"
-  ],
+  "keywords": ["typescript", "orm", "datastore", "activerecord"],
   "author": "Eric Eslinger <eric.eslinger@gmail.com>",
   "license": "MIT",
   "bugs": {
@@ -26,27 +22,22 @@
   "devDependencies": {
     "@types/chai": "^4.0.2",
     "@types/core-js": "^0.9.42",
-    "@types/hapi": "^16.1.8",
-    "@types/joi": "^10.4.0",
     "@types/mocha": "^2.2.41",
     "@types/node": "^8.0.19",
     "@types/socket.io-client": "^1.4.29",
-    "boom": "^5.2.0",
+    "babel-core": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
     "chai": "^4.1.0",
     "del": "^3.0.0",
     "gulp": "gulpjs/gulp.git#4.0",
+    "gulp-babel": "^7.0.0",
     "gulp-sourcemaps": "^2.6.0",
     "gulp-typescript": "^3.2.1",
-    "hapi": "^16.5.0",
-    "joi": "^10.6.0",
     "mocha": "^3.5.0",
-    "pg": "^7.0.2",
-    "plump-store-postgres": "^0.16.0",
-    "plump-strut": "^0.17.0",
+    "plump": "0.25.0",
     "ts-node": "^3.3.0",
     "tslint": "^5.5.0",
     "tslint-eslint-rules": "^4.1.1",
-    "plump": "^0.20.0",
     "typescript": "2.5.2"
   },
   "dependencies": {
