@@ -17,7 +17,7 @@ var SocketIO = _interopRequireWildcard(_socket);
 
 var _mergeOptions = require('merge-options');
 
-var mergeOptions = _interopRequireWildcard(_mergeOptions);
+var _mergeOptions2 = _interopRequireDefault(_mergeOptions);
 
 var _plump = require('plump');
 
@@ -146,7 +146,7 @@ var RestStore = exports.RestStore = function (_Storage) {
             }).forEach(function (dateAttr) {
                 override.attributes[dateAttr] = new Date(d.attributes[dateAttr]);
             });
-            return mergeOptions({}, d, override);
+            return (0, _mergeOptions2.default)({}, d, override);
         }
     }, {
         key: 'readAttributes',

@@ -1,4 +1,4 @@
-import { RestStore } from '../src/index';
+import { RestStore } from '../dist/index';
 import { testSuite } from './storageTests';
 import { mockedAxios, init } from './axiosMocking';
 import { TestType } from './testType';
