@@ -16,9 +16,9 @@
   "author": "Eric Eslinger <eric.eslinger@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kstf/plump-store-rest/issues"
+    "url": "https://github.com/plumpstack/plump-store-rest/issues"
   },
-  "homepage": "https://github.com/kstf/plump-store-rest#readme",
+  "homepage": "https://github.com/plumpstack/plump-store-rest#readme",
   "devDependencies": {
     "@types/chai": "^4.0.2",
     "@types/core-js": "^0.9.42",
