@@ -1,4 +1,4 @@
-import * as SocketIOClient from 'socket.io-client';
+import SocketIOClient from 'socket.io-client';
 import {
   AuthenticationRequest,
   SingletonRequest,

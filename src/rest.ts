@@ -1,5 +1,5 @@
 import Axios, { AxiosInstance, AxiosPromise } from 'axios';
-import * as SocketIO from 'socket.io-client';
+import SocketIO from 'socket.io-client';
 import mergeOptions from 'merge-options';
 // import { testAuthentication } from './socket/authentication.channel';
 
