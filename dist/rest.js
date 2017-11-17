@@ -13,15 +13,13 @@ var _axios2 = _interopRequireDefault(_axios);
 
 var _socket = require('socket.io-client');
 
-var SocketIO = _interopRequireWildcard(_socket);
+var _socket2 = _interopRequireDefault(_socket);
 
 var _mergeOptions = require('merge-options');
 
 var _mergeOptions2 = _interopRequireDefault(_mergeOptions);
 
 var _plump = require('plump');
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -48,7 +46,7 @@ var RestStore = exports.RestStore = function (_Storage) {
         }, opts);
         _this.axios = _this.options.axios || _axios2.default.create(_this.options);
         if (_this.options.socketURL) {
-            _this.io = SocketIO(_this.options.socketURL, { transports: ['websocket'] });
+            _this.io = (0, _socket2.default)(_this.options.socketURL, { transports: ['websocket'] });
             _this.io.on('connect', function () {
                 return console.log('connected to socket');
             });
