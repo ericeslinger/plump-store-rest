@@ -59,8 +59,8 @@ export class RestStore extends Storage implements TerminalStore {
     try {
       if (data.eventType === 'update') {
         this.fireWriteUpdate({
-          type: data.item.type,
-          id: data.item.id,
+          type: data.type,
+          id: data.id,
           invalidate: ['attributes'],
         });
       } else if (data.eventType === 'relationshipCreate') {
@@ -85,6 +85,7 @@ export class RestStore extends Storage implements TerminalStore {
     } catch (e) {
       console.log('ERROR');
       console.log(e);
+      console.log(data);
     }
   }
 
