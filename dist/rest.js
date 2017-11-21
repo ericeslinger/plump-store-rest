@@ -170,17 +170,16 @@ var RestStore = exports.RestStore = function (_Storage) {
                             _this4.fireReadUpdate(_this4.fixDates(includedData));
                         });
                     }
-                    // const schema = this.getSchema(item.type);
-                    // Object.keys(schema.attributes)
-                    //   .filter(attr => schema.attributes[attr].type === 'date')
-                    //   .forEach(dateAttr => {
-                    //     result.attributes[dateAttr] = new Date(
-                    //       result.attributes[dateAttr],
-                    //     );
-                    //   });
                     return _this4.fixDates(result);
                 }
-            }).catch(function (err) {
+            }).then(function (v) {
+                return new Promise(function (resolve) {
+                    return setTimeout(function () {
+                        return resolve(v);
+                    }, 5);
+                });
+            }) // make sure results are cached.
+            .catch(function (err) {
                 if (err.response && err.response.status === 404) {
                     return null;
                 } else {
@@ -196,10 +195,10 @@ var RestStore = exports.RestStore = function (_Storage) {
             return this.debounceGet('/' + req.item.type + '/' + req.item.id + '/' + req.rel).then(function (response) {
                 if (response.data.included) {
                     response.data.included.forEach(function (item) {
-                        _this5.fireReadUpdate(item);
+                        _this5.fireReadUpdate(_this5.fixDates(item));
                     });
                 }
-                return response.data;
+                return _this5.fixDates(response.data);
             }).catch(function (err) {
                 if (err.response && err.response.status === 404) {
                     return [];

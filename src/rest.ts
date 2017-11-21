@@ -148,17 +148,10 @@ export class RestStore extends Storage implements TerminalStore {
               this.fireReadUpdate(this.fixDates(includedData));
             });
           }
-          // const schema = this.getSchema(item.type);
-          // Object.keys(schema.attributes)
-          //   .filter(attr => schema.attributes[attr].type === 'date')
-          //   .forEach(dateAttr => {
-          //     result.attributes[dateAttr] = new Date(
-          //       result.attributes[dateAttr],
-          //     );
-          //   });
           return this.fixDates(result);
         }
       })
+      .then(v => new Promise(resolve => setTimeout(() => resolve(v), 5))) // make sure results are cached.
       .catch(err => {
         if (err.response && err.response.status === 404) {
           return null;
@@ -173,10 +166,10 @@ export class RestStore extends Storage implements TerminalStore {
       .then(response => {
         if (response.data.included) {
           response.data.included.forEach(item => {
-            this.fireReadUpdate(item);
+            this.fireReadUpdate(this.fixDates(item));
           });
         }
-        return response.data;
+        return this.fixDates(response.data);
       })
       .catch(err => {
         if (err.response && err.response.status === 404) {
