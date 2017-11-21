@@ -170,17 +170,16 @@ var RestStore = exports.RestStore = function (_Storage) {
                             _this4.fireReadUpdate(_this4.fixDates(includedData));
                         });
                     }
-                    // const schema = this.getSchema(item.type);
-                    // Object.keys(schema.attributes)
-                    //   .filter(attr => schema.attributes[attr].type === 'date')
-                    //   .forEach(dateAttr => {
-                    //     result.attributes[dateAttr] = new Date(
-                    //       result.attributes[dateAttr],
-                    //     );
-                    //   });
                     return _this4.fixDates(result);
                 }
-            }).catch(function (err) {
+            }).then(function (v) {
+                return new Promise(function (resolve) {
+                    return setTimeout(function () {
+                        return resolve(v);
+                    }, 5);
+                });
+            }) // make sure results are cached.
+            .catch(function (err) {
                 if (err.response && err.response.status === 404) {
                     return null;
                 } else {
