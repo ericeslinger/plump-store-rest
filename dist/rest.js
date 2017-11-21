@@ -195,10 +195,10 @@ var RestStore = exports.RestStore = function (_Storage) {
             return this.debounceGet('/' + req.item.type + '/' + req.item.id + '/' + req.rel).then(function (response) {
                 if (response.data.included) {
                     response.data.included.forEach(function (item) {
-                        _this5.fireReadUpdate(item);
+                        _this5.fireReadUpdate(_this5.fixDates(item));
                     });
                 }
-                return response.data;
+                return _this5.fixDates(response.data);
             }).catch(function (err) {
                 if (err.response && err.response.status === 404) {
                     return [];

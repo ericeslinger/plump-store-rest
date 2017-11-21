@@ -166,10 +166,10 @@ export class RestStore extends Storage implements TerminalStore {
       .then(response => {
         if (response.data.included) {
           response.data.included.forEach(item => {
-            this.fireReadUpdate(item);
+            this.fireReadUpdate(this.fixDates(item));
           });
         }
-        return response.data;
+        return this.fixDates(response.data);
       })
       .catch(err => {
         if (err.response && err.response.status === 404) {
