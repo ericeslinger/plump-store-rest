@@ -114,18 +114,49 @@ export class RestStore extends Storage implements TerminalStore {
   }
 
   fixDates(d: ModelData) {
-    if (!d.attributes) {
+    if (!d.attributes && !d.relationships) {
       return d;
     }
     const schema = this.getSchema(d.type);
     const override = {
       attributes: {},
+      relationships: {},
     };
     Object.keys(schema.attributes)
       .filter(attr => schema.attributes[attr].type === 'date')
       .forEach(dateAttr => {
         override.attributes[dateAttr] = new Date(d.attributes[dateAttr]);
       });
+    Object.keys(schema.relationships).forEach(relName => {
+      if (
+        d.relationships &&
+        d.relationships[relName] &&
+        d.relationships[relName].length > 0 &&
+        schema.relationships[relName].type.extras
+      ) {
+        const toChange = Object.keys(
+          schema.relationships[relName].type.extras,
+        ).filter(extraField => {
+          if (
+            schema.relationships[relName].type.extras[extraField].type ===
+            'date'
+          ) {
+            return true;
+          } else {
+            return false;
+          }
+        });
+        if (toChange.length > 0) {
+          override.relationships[relName] = d.relationships[relName].map(rel =>
+            mergeOptions(
+              ...[rel].concat(toChange.map(tc => ({
+                meta: { [tc]: new Date(rel.meta[tc] as string) },
+              })) as any),
+            ),
+          );
+        }
+      }
+    });
     return mergeOptions({}, d, override);
   }
 

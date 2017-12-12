@@ -111,7 +111,26 @@ export function testSuite(context, storeOpts) {
             name: { type: 'string' },
             when: { type: 'date' },
           },
-          relationships: {},
+          relationships: {
+            children: {
+              type: {
+                sides: {
+                  children: { otherType: 'datedTests', otherName: 'parents' },
+                  parents: { otherType: 'datedTests', otherName: 'children' },
+                },
+                extras: { when: { type: 'date' } },
+              },
+            },
+            parents: {
+              type: {
+                sides: {
+                  children: { otherType: 'datedTests', otherName: 'parents' },
+                  parents: { otherType: 'datedTests', otherName: 'children' },
+                },
+                extras: { when: { type: 'date' } },
+              },
+            },
+          },
         })
         class DatedType extends Model<ModelData> {
           static type = 'datedTests';
@@ -135,6 +154,30 @@ export function testSuite(context, storeOpts) {
             .then(v => {
               expect(v.attributes.when instanceof Date).to.equal(true);
               expect(v.attributes.when.getTime()).to.equal(theDate.getTime());
+              return v;
+            })
+            .then(v => {
+              return actualStore
+                .writeRelationshipItem(
+                  { type: DatedType.type, id: v.id },
+                  'children',
+                  { id: 400, meta: { when: theDate } },
+                )
+                .then(() =>
+                  actualStore.read({
+                    item: { type: 'datedTests', id: v.id },
+                    fields: ['attributes', 'relationships'],
+                  }),
+                )
+                .then(v => {
+                  expect(v.relationships.children).to.have.length(1);
+                  expect(
+                    v.relationships.children[0].meta.when instanceof Date,
+                  ).to.equal(true);
+                  expect(
+                    (v.relationships.children[0].meta.when as Date).getTime(),
+                  ).to.equal(theDate.getTime());
+                });
             });
         });
       });
