@@ -71,6 +71,8 @@ var RestStore = exports.RestStore = function (_Storage) {
                     delete _this2.httpInProgress[url];
                     return v;
                 });
+            } else {
+                console.log('debounced ' + url);
             }
             return this.httpInProgress[url];
         }

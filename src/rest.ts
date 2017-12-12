@@ -51,6 +51,8 @@ export class RestStore extends Storage implements TerminalStore {
         delete this.httpInProgress[url];
         return v;
       });
+    } else {
+      console.log('debounced ' + url);
     }
     return this.httpInProgress[url];
   }
