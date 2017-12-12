@@ -23,6 +23,10 @@ var _plump = require('plump');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -133,17 +137,38 @@ var RestStore = exports.RestStore = function (_Storage) {
     }, {
         key: 'fixDates',
         value: function fixDates(d) {
-            if (!d.attributes) {
+            if (!d.attributes && !d.relationships) {
                 return d;
             }
             var schema = this.getSchema(d.type);
             var override = {
-                attributes: {}
+                attributes: {},
+                relationships: {}
             };
             Object.keys(schema.attributes).filter(function (attr) {
                 return schema.attributes[attr].type === 'date';
             }).forEach(function (dateAttr) {
                 override.attributes[dateAttr] = new Date(d.attributes[dateAttr]);
+            });
+            Object.keys(schema.relationships).forEach(function (relName) {
+                if (d.relationships && d.relationships[relName] && d.relationships[relName].length > 0 && schema.relationships[relName].type.extras) {
+                    var toChange = Object.keys(schema.relationships[relName].type.extras).filter(function (extraField) {
+                        if (schema.relationships[relName].type.extras[extraField].type === 'date') {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    });
+                    if (toChange.length > 0) {
+                        override.relationships[relName] = d.relationships[relName].map(function (rel) {
+                            return _mergeOptions2.default.apply(undefined, _toConsumableArray([rel].concat(toChange.map(function (tc) {
+                                return {
+                                    meta: _defineProperty({}, tc, new Date(rel.meta[tc]))
+                                };
+                            }))));
+                        });
+                    }
+                }
             });
             return (0, _mergeOptions2.default)({}, d, override);
         }

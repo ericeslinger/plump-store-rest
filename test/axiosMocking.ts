@@ -11,7 +11,26 @@ const backingStore = new MemoryStore({ terminal: true });
     name: { type: 'string' },
     when: { type: 'date' },
   },
-  relationships: {},
+  relationships: {
+    children: {
+      type: {
+        sides: {
+          children: { otherType: 'datedTests', otherName: 'parents' },
+          parents: { otherType: 'datedTests', otherName: 'children' },
+        },
+        extras: { when: { type: 'date' } },
+      },
+    },
+    parents: {
+      type: {
+        sides: {
+          children: { otherType: 'datedTests', otherName: 'parents' },
+          parents: { otherType: 'datedTests', otherName: 'children' },
+        },
+        extras: { when: { type: 'date' } },
+      },
+    },
+  },
 })
 class DatedType extends Model<ModelData> {
   static type = 'datedTests';
